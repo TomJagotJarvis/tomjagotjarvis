@@ -8,13 +8,13 @@
 {{ .Scratch.Set "large" $img }}
 
 {{ if and $img (gt $img.Width 600) }}
-{{ .Scratch.Set "small" ($img.Fit "600x9999") }}
+{{ .Scratch.Set "small" ($img.Fit "600x9999 q85") }}
 {{ end }}
 {{ if and $img (gt $img.Width 1200) }}
-{{ .Scratch.Set "medium" ($img.Fit "1200x9999") }}
+{{ .Scratch.Set "medium" ($img.Fit "1200x9999 q85") }}
 {{ end }}
 {{ if and $img (gt $img.Width 2000) }}
-{{ .Scratch.Set "large" ($img.Fit "2000x9999") }}
+{{ .Scratch.Set "large" ($img.Fit "2000x9999 q85") }}
 {{ end }}
 
 {{ $small := .Scratch.Get "small" }}
