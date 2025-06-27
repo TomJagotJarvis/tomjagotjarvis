@@ -7,3 +7,6 @@ publishDir = "public"
 
 [taxonomies]
   tag = "tags"
+
+[permalinks]
+post = "/posts/:slug/"

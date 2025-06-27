@@ -2,7 +2,6 @@
 title: "2025 06 26_test Post"
 date: 2025-06-26T19:51:10+01:00
 draft: false
-url: "/2025-06-26_test-post"
 featured: "example2.jpg"
 ---
 
