@@ -3,6 +3,8 @@ title: "My First Post"
 date: 2025-06-26
 featured: "example3.jpg"
 draft: false
+type: "post"
+tags: ["London", "Urban", "Street"]
 ---
 
 Hello! This is a test post.

@@ -149,3 +149,23 @@ footer {
   max-width: none;
   margin-left: calc(-50vw + 50%);
 }
+
+.tags-inline {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.tags-inline .tag-link {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  background-color: #eee;
+  color: #333;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.tags-inline .tag-link:hover {
+  background-color: #ddd;
+}
