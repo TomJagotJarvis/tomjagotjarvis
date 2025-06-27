@@ -41,7 +41,9 @@ header {
 }
 
 footer {
-  border-top: 1px solid #eee;
+  background-color: #f9f9f9;
+  color: #333;
+  padding: 1rem 0;
   font-size: 0.9rem;
 }
 
@@ -259,18 +261,15 @@ footer {
   margin-left: 0.3rem;
 }
 
-footer .footer-inner {
+.footer-inner {
   max-width: 1000px;
   margin: 0 auto;
-  padding: 0 1rem;
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  align-items: center;
+  text-align: center;
 }
 
 footer {
-  background: none; /* or a light color like #f9f9f9 */
+  background: none;
+  /* or a light color like #f9f9f9 */
   color: #333;
   padding: 2rem 1rem;
   font-family: "Inter", sans-serif;
@@ -293,23 +292,6 @@ footer a:hover {
     font-size: 0.8rem;
     padding: 1.5rem 1rem;
   }
-}
-
-.footer-inner {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 1rem;
-  text-align: center;
-}
-
-.footer-inner div {
-  margin: 0.25rem 0;
-}
-
-.footer-inner a {
-  color: #5a2a82;
-  text-decoration: none;
-  margin: 0 0.5rem;
 }
 
 .footer-inner a:hover {
