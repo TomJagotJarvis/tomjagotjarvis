@@ -1,0 +1,1 @@
+hugo new posts/$(date +%F)_my-third-post/index.md

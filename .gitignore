@@ -1,0 +1,31 @@
+# Hugo build output
+/public/
+/resources/
+/hugo_stats.json
+
+# Build locks
+.hugo_build.lock
+
+# OS / editor / tool files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.bak
+*.tmp
+*.log
+
+# VSCode and JetBrains IDEs
+.vscode/
+.idea/
+
+# Hugo image bundles (we assume you'll add images manually to .gitignore)
+content/posts/*/example*.jpg
+content/posts/*/*.jpg
+content/posts/*/*.jpeg
+content/posts/*/*.png
+content/posts/*/*.webp
+
+# Node/npm-related (if you ever use Hugo pipes or assets)
+node_modules/
+dist/

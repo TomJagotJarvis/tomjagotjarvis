@@ -1,0 +1,6 @@
+baseURL = "https://your-domain.com/"
+title = "My Photography Site"
+publishDir = "public"
+
+[pagination]
+  pagerSize = 5

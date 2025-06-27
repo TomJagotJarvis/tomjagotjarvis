@@ -1,0 +1,38 @@
+{{ $src := .Get "src" }}
+{{ $alt := .Get "alt" }}
+{{ $img := .Page.Resources.GetMatch (printf "**/%s" $src) }}
+
+{{ if $img }}
+  {{ .Scratch.Set "small" $img }}
+  {{ .Scratch.Set "medium" $img }}
+  {{ .Scratch.Set "large" $img }}
+
+  {{ if and $img (gt $img.Width 600) }}
+    {{ .Scratch.Set "small" ($img.Fit "600x9999") }}
+  {{ end }}
+  {{ if and $img (gt $img.Width 1200) }}
+    {{ .Scratch.Set "medium" ($img.Fit "1200x9999") }}
+  {{ end }}
+  {{ if and $img (gt $img.Width 2000) }}
+    {{ .Scratch.Set "large" ($img.Fit "2000x9999") }}
+  {{ end }}
+
+  {{ $small := .Scratch.Get "small" }}
+  {{ $medium := .Scratch.Get "medium" }}
+  {{ $large := .Scratch.Get "large" }}
+
+  <picture>
+    <source srcset="{{ $large.RelPermalink }}" media="(min-width: 1201px)">
+    <source srcset="{{ $medium.RelPermalink }}" media="(min-width: 601px)">
+    <img
+      src="{{ $small.RelPermalink }}"
+      srcset="{{ $small.RelPermalink }} 600w, {{ $medium.RelPermalink }} 1200w, {{ $large.RelPermalink }} 2000w"
+      sizes="(max-width: 600px) 600px, (max-width: 1200px) 1200px, 2000px"
+      alt="{{ $alt }}"
+      loading="lazy"
+      style="width:100%;height:auto;"
+    >
+  </picture>
+{{ else }}
+  <p style="color:red;">Image not found or not processable: {{ $src }}</p>
+{{ end }}

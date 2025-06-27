@@ -1,0 +1,22 @@
+{{ define "main" }}
+<section class="posts-list">
+  {{ $paginator := .Paginate (where .Pages "Type" "posts") }}
+  {{ range $paginator.Pages }}
+  <article class="preview">
+    <a href="{{ .RelPermalink }}">
+      <h2>{{ .Title }}</h2>
+      <p>{{ .Date.Format "Jan 2, 2006" }}</p>
+    </a>
+  </article>
+  {{ end }}
+</section>
+
+<div class="pagination">
+  {{ if $paginator.HasPrev }}
+    <a href="{{ $paginator.Prev.URL }}">← Previous</a>
+  {{ end }}
+  {{ if $paginator.HasNext }}
+    <a href="{{ $paginator.Next.URL }}">Next →</a>
+  {{ end }}
+</div>
+{{ end }}
