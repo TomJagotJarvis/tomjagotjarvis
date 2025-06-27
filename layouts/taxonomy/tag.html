@@ -1,34 +1,28 @@
 {{ define "main" }}
   <div class="text-container">
-    <h1>Posts tagged “{{ .Title }}”</h1>
-  </div>
+    <h1 class="tag-heading">Tagged: {{ .Title }}</h1>
 
-  <div class="posts-list">
-    {{ range .Pages }}
-      {{ $page := . }}
-      {{ $featured := $page.Params.featured }}
-      {{ $res := "" }}
-      {{ with $featured }}
-        {{ $res = $page.Resources.GetMatch . }}
+    <div class="posts-list">
+      {{ range .Pages }}
+        {{ $p := . }}
+        <article class="post-preview">
+          <a href="{{ $p.RelPermalink }}">
+            {{ with $p.Params.featured }}
+              {{ $img := . }}
+              {{ with $p.Resources.GetMatch $img }}
+                {{ with .Fit "800x600" }}
+                  <img src="{{ .RelPermalink }}" alt="{{ $p.Title }}">
+                {{ end }}
+              {{ else }}
+                <img src="{{ $img | relURL }}" alt="{{ $p.Title }}">
+              {{ end }}
+            {{ end }}
+            <div class="overlay">
+              <div class="title">{{ $p.Title }}</div>
+            </div>
+          </a>
+        </article>
       {{ end }}
-
-      <article class="post-preview">
-        <a href="{{ $page.RelPermalink }}">
-          {{ if and $res (isset $res "MediaType") (in $res.MediaType.Type "image") }}
-            {{ $thumb := $res.Fit "800x0" }}
-            <img src="{{ $thumb.RelPermalink }}" alt="{{ $page.Title }}">
-          {{ else if $featured }}
-            <img src="{{ printf "%s%s" $page.RelPermalink $featured }}" alt="{{ $page.Title }}">
-          {{ end }}
-          <div class="overlay">
-            <div class="title">{{ $page.Title }}</div>
-          </div>
-        </a>
-      </article>
-    {{ end }}
-  </div>
-
-  <div class="pagination">
-    {{ template "_internal/pagination.html" . }}
+    </div>
   </div>
 {{ end }}

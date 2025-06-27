@@ -4,14 +4,13 @@
     <h1>{{ .Title }}</h1>
     <time>{{ .Date.Format "Jan 2, 2006" }}</time>
 
-{{ with .Params.tags }}
-<p class="tags-inline">
-  {{ range . }}
-    <a href="{{ "tags/" | relURL }}{{ . | urlize }}" class="tag-link">{{ . }}</a>
-  {{ end }}
-</p>
-{{ end }}
-
+    {{ with .Params.tags }}
+    <div class="tags-inline">
+      {{ range . }}
+        <a class="tag-link" href="{{ "/tags/" | relURL }}{{ . | urlize }}">{{ . }}</a>
+      {{ end }}
+    </div>
+    {{ end }}
 
     <div class="post-body">
       {{ .Content }}
