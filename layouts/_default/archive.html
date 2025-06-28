@@ -1,0 +1,26 @@
+{{ define "main" }}
+<div class="text-container">
+    <h1 class="archive-heading">Archive</h1>
+
+    {{ $posts := slice }}
+    {{ range .Site.RegularPages }}
+    {{ if and (eq .Type "post") (ne .File.BaseFileName "archive") }}
+    {{ $posts = $posts | append . }}
+    {{ end }}
+    {{ end }}
+
+    {{ $sorted := sort $posts "Date" "desc" }}
+
+    {{ range $group := $posts.GroupByDate "2006" }}
+    <h2>{{ $group.Key }}</h2>
+    <ul class="archive-list">
+        {{ range $group.Pages }}
+        <li>
+            <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+            <span class="archive-date">({{ .Date.Format "Jan 2" }})</span>
+        </li>
+        {{ end }}
+    </ul>
+    {{ end }}
+</div>
+{{ end }}

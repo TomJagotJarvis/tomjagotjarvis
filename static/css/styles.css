@@ -311,3 +311,35 @@ header h1 {
     font-size: 1.8rem;
   }
 }
+
+.archive-heading {
+  font-size: 2rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-family: "Playfair Display", serif;
+}
+
+.archive-list {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 2rem;
+}
+
+.archive-list li {
+  margin: 0.3rem 0;
+}
+
+.archive-list a {
+  text-decoration: none;
+  color: #5a2a82;
+}
+
+.archive-list a:hover {
+  text-decoration: underline;
+}
+
+.archive-date {
+  color: #666;
+  font-size: 0.9rem;
+  margin-left: 0.5rem;
+}

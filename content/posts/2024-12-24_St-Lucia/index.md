@@ -2,6 +2,7 @@
 title: "St Lucia"
 date: 2024-12-24T00:00:00+00:00
 draft: false
+type: "post"
 featured: "_DSC7442.jpg"
 tags: ["St Lucia","Caribbean"]
 ---
