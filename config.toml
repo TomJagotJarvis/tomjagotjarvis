@@ -1,5 +1,5 @@
 baseURL = "https://your-domain.com/"
-title = "My Photography Site"
+title = "Tom Jagot-Jarvis"
 publishDir = "public"
 
 [pagination]
@@ -10,3 +10,6 @@ publishDir = "public"
 
 [permalinks]
 post = "/posts/:slug/"
+
+[minify]
+  disableXML = true

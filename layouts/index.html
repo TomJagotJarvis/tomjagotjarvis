@@ -1,14 +1,14 @@
 {{ define "main" }}
 <div class="posts-list">
-  {{ range .Site.RegularPages }}
-    <a href="{{ .RelPermalink }}" class="post-preview">
-      {{ with .Page.Resources.GetMatch .Params.featured }}
-        <img src="{{ .RelPermalink }}" alt="{{ $.Title }}">
-      {{ end }}
-      <div class="overlay">
-        <div class="title">{{ .Title }}</div>
-      </div>
-    </a>
+  {{ range where .Site.RegularPages "Type" "post" }}
+  <a href="{{ .RelPermalink }}" class="post-preview">
+    {{ with .Page.Resources.GetMatch .Params.featured }}
+    <img src="{{ .RelPermalink }}" alt="{{ $.Title }}">
+    {{ end }}
+    <div class="overlay">
+      <div class="title">{{ .Title }}</div>
+    </div>
+  </a>
   {{ end }}
 </div>
 {{ end }}

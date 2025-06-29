@@ -343,3 +343,11 @@ header h1 {
   font-size: 0.9rem;
   margin-left: 0.5rem;
 }
+
+picture.portrait img {
+  max-width: 60vw;
+  /* Max 60% of the viewport width */
+  width: 100%;
+  margin: 2rem auto;
+  display: block;
+}
