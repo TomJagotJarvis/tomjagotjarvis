@@ -1,0 +1,19 @@
+{{ define "main" }}
+<div class="posts-list">
+    {{ $pages := where .Pages "Type" "post" }}
+    {{ range $pages }}
+    <a href="{{ .RelPermalink }}" class="post-preview">
+        {{ $slug := path.Base .File.Dir }}
+        {{ $img := resources.Get (printf "originals/%s/%s" $slug .Params.featured) }}
+        {{ with $img }}
+        {{ $thumb := .Fit "600x q75" }}
+        <img class="thumbnail" src="{{ $thumb.RelPermalink }}" alt="{{ $.Title }}">
+
+        {{ end }}
+        <div class="overlay">
+            <div class="title">{{ .Title }}</div>
+        </div>
+    </a>
+    {{ end }}
+</div>
+{{ end }}

@@ -25,6 +25,11 @@ content/posts/*/*.jpg
 content/posts/*/*.jpeg
 content/posts/*/*.png
 content/posts/*/*.webp
+# Now ignoring images in assets/
+assets/**/*.jpg
+assets/**/*.jpeg
+assets/**/*.png
+assets/**/*.webp
 
 # Node/npm-related (if you ever use Hugo pipes or assets)
 node_modules/

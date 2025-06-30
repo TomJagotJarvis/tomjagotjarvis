@@ -1,9 +1,16 @@
 {{ define "main" }}
 <div class="posts-list">
   {{ range where .Site.RegularPages "Type" "post" }}
+  {{ $slug := path.Base .File.Dir }}
+  {{ $imgPath := printf "originals/%s/%s" $slug .Params.featured }}
+  {{ $img := resources.Get $imgPath }}
+
   <a href="{{ .RelPermalink }}" class="post-preview">
-    {{ with .Page.Resources.GetMatch .Params.featured }}
-    <img src="{{ .RelPermalink }}" alt="{{ $.Title }}">
+    {{ with $img }}
+    {{ $thumb := .Fit "1200x9999 q85" }}
+    <img src="{{ $thumb.RelPermalink }}" alt="{{ $.Title }}">
+    {{ else }}
+    <p style="color:red;">No featured image found for: {{ .Params.featured }}</p>
     {{ end }}
     <div class="overlay">
       <div class="title">{{ .Title }}</div>

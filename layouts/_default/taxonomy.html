@@ -1,10 +1,20 @@
 {{ define "main" }}
-  <div class="text-container">
-    <h1>Posts tagged with '{{ .Title }}'</h1>
-    <ul>
-      {{ range .Pages }}
-        <li><a href="{{ .RelPermalink }}">{{ .Title }}</a></li>
+<div class="text-container">
+  <h1 class="tag-heading">{{ .Title | title }}</h1>
+  <div class="posts-list">
+    {{ range .Pages }}
+    <a href="{{ .RelPermalink }}" class="post-preview">
+      {{ $slug := path.Base .File.Dir }}
+      {{ $img := resources.Get (printf "originals/%s/%s" $slug .Params.featured) }}
+      {{ with $img }}
+      {{ $thumb := .Fit "600x9999 q85" }}
+      <img src="{{ $thumb.RelPermalink }}" alt="{{ $.Title }}" class="thumbnail">
       {{ end }}
-    </ul>
+      <div class="overlay">
+        <div class="title">{{ .Title }}</div>
+      </div>
+    </a>
+    {{ end }}
   </div>
+</div>
 {{ end }}
