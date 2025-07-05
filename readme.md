@@ -19,3 +19,19 @@ You’ll need the **extended** version of Hugo to use image processing:
 
 ```bash
 hugo new posts/$(date +%F)_my-post-title/index.md
+```
+
+Or:
+```bash
+./content/new-post.sh 2024-12-24_St-Lucia
+```
+
+## 📝 How to Add Images to a Post
+
+Place the images in the assets post directory, e.g. assets/originals/2024-12-24_St-Lucia
+
+1. **Run this command:**
+
+```bash
+./content/add-images.sh content/posts/2024-12-24_St-Lucia
+```
