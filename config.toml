@@ -1,6 +1,7 @@
-baseURL = "https://your-domain.com/"
+baseURL = "https://tomjagotjarvis.com/"
 title = "Tom Jagot-Jarvis"
 publishDir = "public"
+uglyURLs = false
 
 [pagination]
   pagerSize = 5
