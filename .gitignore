@@ -34,3 +34,6 @@ assets/**/*.webp
 # Node/npm-related (if you ever use Hugo pipes or assets)
 node_modules/
 dist/
+
+# Enviornment variables
+.env
