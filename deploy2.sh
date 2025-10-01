@@ -79,12 +79,14 @@ while IFS= read -r line; do
   if (( i % MAX == 0 )); then
     send_invalidation_batch "$batch_lines" "${CALLER_BASE}-${i}"
     batch_lines=""
+    sleep 1
   fi
 done <<< "$CHANGED"
 
 # Flush remainder
 if [ -n "$batch_lines" ]; then
   send_invalidation_batch "$batch_lines" "${CALLER_BASE}-final"
+  sleep 1
 fi
 
 echo "✅ Deploy and selective invalidation complete."
