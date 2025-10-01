@@ -96,6 +96,7 @@ footer {
   padding: 0.75rem 0.65rem;
   font-size: 1.1rem;
   font-weight: 500;
+  font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 
 .overlay .title {
