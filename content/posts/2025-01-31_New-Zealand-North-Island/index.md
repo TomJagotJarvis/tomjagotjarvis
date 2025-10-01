@@ -4,7 +4,7 @@ date: 2025-01-31 00:00:00 +0000 GMT
 draft: false
 type: "post"
 featured: "_DSC8846.jpg"
-tags: ["New Zealand","Oceana"]
+tags: ["New Zealand","Oceania"]
 ---
 
 {{< responsive-img src="_DSC7925.jpg" alt="_DSC7925" >}}

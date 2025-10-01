@@ -4,7 +4,7 @@ date: 2025-02-10 00:00:00 +0000 GMT
 draft: false
 type: "post"
 featured: "131___DSC9694.jpg"
-tags: ["New Zealand","Oceana"]
+tags: ["New Zealand","Oceania"]
 ---
 
 {{< responsive-img src="001___DSC8935.jpg" alt="001___DSC8935" >}}
@@ -39,8 +39,6 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="016___DSC9046.jpg" alt="016___DSC9046" >}}
 
-{{< responsive-img src="017___DSC9050.jpg" alt="017___DSC9050" >}}
-
 {{< responsive-img src="018___DSC9053.jpg" alt="018___DSC9053" >}}
 
 {{< responsive-img src="019___DSC9062.jpg" alt="019___DSC9062" >}}
@@ -50,8 +48,6 @@ tags: ["New Zealand","Oceana"]
 {{< responsive-img src="021___DSC9072.jpg" alt="021___DSC9072" >}}
 
 {{< responsive-img src="022___DSC9077.jpg" alt="022___DSC9077" >}}
-
-{{< responsive-img src="023___DSC9083.jpg" alt="023___DSC9083" >}}
 
 {{< responsive-img src="024___DSC9092.jpg" alt="024___DSC9092" >}}
 
@@ -63,13 +59,9 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="028___DSC9137.jpg" alt="028___DSC9137" >}}
 
-{{< responsive-img src="029___DSC9138.jpg" alt="029___DSC9138" >}}
-
 {{< responsive-img src="030___DSC9145.jpg" alt="030___DSC9145" >}}
 
 {{< responsive-img src="031___DSC9146.jpg" alt="031___DSC9146" >}}
-
-{{< responsive-img src="032___DSC9151.jpg" alt="032___DSC9151" >}}
 
 {{< responsive-img src="033___DSC9157.jpg" alt="033___DSC9157" >}}
 
@@ -85,8 +77,6 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="039___DSC9198.jpg" alt="039___DSC9198" >}}
 
-{{< responsive-img src="040___DSC9205.jpg" alt="040___DSC9205" >}}
-
 {{< responsive-img src="041___DSC9206.jpg" alt="041___DSC9206" >}}
 
 {{< responsive-img src="042___DSC9212.jpg" alt="042___DSC9212" >}}
@@ -95,13 +85,7 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="044___DSC9227.jpg" alt="044___DSC9227" >}}
 
-{{< responsive-img src="045___DSC9238.jpg" alt="045___DSC9238" >}}
-
-{{< responsive-img src="046___DSC9239.jpg" alt="046___DSC9239" >}}
-
 {{< responsive-img src="047___DSC9241.jpg" alt="047___DSC9241" >}}
-
-{{< responsive-img src="048___DSC9243.jpg" alt="048___DSC9243" >}}
 
 {{< responsive-img src="049___DSC9249.jpg" alt="049___DSC9249" >}}
 
@@ -110,8 +94,6 @@ tags: ["New Zealand","Oceana"]
 {{< responsive-img src="051___DSC9260.jpg" alt="051___DSC9260" >}}
 
 {{< responsive-img src="052___DSC9290.jpg" alt="052___DSC9290" >}}
-
-{{< responsive-img src="053___DSC9295.jpg" alt="053___DSC9295" >}}
 
 {{< responsive-img src="054___DSC9297.jpg" alt="054___DSC9297" >}}
 
@@ -195,11 +177,7 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="094___DSC9489.jpg" alt="094___DSC9489" >}}
 
-{{< responsive-img src="095___DSC9490.jpg" alt="095___DSC9490" >}}
-
 {{< responsive-img src="096___DSC9492.jpg" alt="096___DSC9492" >}}
-
-{{< responsive-img src="097___DSC9494.jpg" alt="097___DSC9494" >}}
 
 {{< responsive-img src="098___DSC9501.jpg" alt="098___DSC9501" >}}
 
@@ -219,8 +197,6 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="106___DSC9548.jpg" alt="106___DSC9548" >}}
 
-{{< responsive-img src="107___DSC9549.jpg" alt="107___DSC9549" >}}
-
 {{< responsive-img src="108___DSC9551.jpg" alt="108___DSC9551" >}}
 
 {{< responsive-img src="109___DSC9557.jpg" alt="109___DSC9557" >}}
@@ -237,8 +213,6 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="115___DSC9590.jpg" alt="115___DSC9590" >}}
 
-{{< responsive-img src="116___DSC9593.jpg" alt="116___DSC9593" >}}
-
 {{< responsive-img src="117___DSC9595.jpg" alt="117___DSC9595" >}}
 
 {{< responsive-img src="118___DSC9608.jpg" alt="118___DSC9608" >}}
@@ -251,15 +225,11 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="122___DSC9636.jpg" alt="122___DSC9636" >}}
 
-{{< responsive-img src="123___DSC9647.jpg" alt="123___DSC9647" >}}
-
 {{< responsive-img src="124___DSC9648.jpg" alt="124___DSC9648" >}}
 
 {{< responsive-img src="125___DSC9658.jpg" alt="125___DSC9658" >}}
 
 {{< responsive-img src="126___DSC9666.jpg" alt="126___DSC9666" >}}
-
-{{< responsive-img src="127___DSC9668.jpg" alt="127___DSC9668" >}}
 
 {{< responsive-img src="128___DSC9670.jpg" alt="128___DSC9670" >}}
 
@@ -295,8 +265,6 @@ tags: ["New Zealand","Oceana"]
 
 {{< responsive-img src="144___DSC9756.jpg" alt="144___DSC9756" >}}
 
-{{< responsive-img src="145___DSC9757.jpg" alt="145___DSC9757" >}}
-
 {{< responsive-img src="146___DSC9761.jpg" alt="146___DSC9761" >}}
 
 {{< responsive-img src="147___DSC9764.jpg" alt="147___DSC9764" >}}
@@ -318,8 +286,6 @@ tags: ["New Zealand","Oceana"]
 {{< responsive-img src="155___DSC9834.jpg" alt="155___DSC9834" >}}
 
 {{< responsive-img src="156___DSC9840.jpg" alt="156___DSC9840" >}}
-
-{{< responsive-img src="157___DSC9843.jpg" alt="157___DSC9843" >}}
 
 {{< responsive-img src="158___DSC9844.jpg" alt="158___DSC9844" >}}
 
@@ -404,8 +370,6 @@ tags: ["New Zealand","Oceana"]
 {{< responsive-img src="198___DSC0109.jpg" alt="198___DSC0109" >}}
 
 {{< responsive-img src="199___DSC0118.jpg" alt="199___DSC0118" >}}
-
-{{< responsive-img src="200___DSC0127.jpg" alt="200___DSC0127" >}}
 
 {{< responsive-img src="201___DSC0142.jpg" alt="201___DSC0142" >}}
 
