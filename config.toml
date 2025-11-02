@@ -2,6 +2,8 @@ baseURL = "https://tomjagotjarvis.com/"
 title = "Tom Jagot-Jarvis"
 publishDir = "public"
 uglyURLs = false
+relativeURLs = true
+canonifyURLs = false
 
 [pagination]
   pagerSize = 5
