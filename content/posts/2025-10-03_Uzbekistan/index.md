@@ -4,7 +4,7 @@ date: 2025-10-03 00:00:00 +0000 +0000
 draft: false
 type: "post"
 featured: "_DSC2219.jpg"
-tags: ["Uzbekistan","Central Asia", "Tajikistan", "Tashkent", "Khiva", "Bukhara", "Samarkand", "Khujand"]
+tags: ["Uzbekistan","Central Asia", "Tajikistan", "Tashkent", "Khiva", "Bukhara", "Samarkand", "Khujand","Asia"]
 ---
 
 Tashkent

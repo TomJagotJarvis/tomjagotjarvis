@@ -4,7 +4,7 @@ date: 2025-10-10 00:00:00 +0000 +0000
 draft: false
 type: "post"
 featured: "_DSC2519.jpg"
-tags: ["Turkmenistan","Darvaza","Door to Hell", "Gates of Hell","Ashgabat", "Nisa", "Merv"]
+tags: ["Turkmenistan","Darvaza","Door to Hell", "Gates of Hell","Ashgabat", "Nisa", "Merv","Asia"]
 ---
 
 Darvaza Gas Crater, also known as the Gates of Hell
