@@ -1,6 +1,12 @@
 {{ define "main" }}
 <div class="posts-list">
-  {{ range where .Site.RegularPages "Type" "post" }}
+  {{/* Collect posts */}}
+  {{ $posts := where .Site.RegularPages "Type" "post" }}
+
+  {{/* Paginate newest-first */}}
+  {{ $paginator := .Paginate ($posts.ByDate.Reverse) }}
+
+  {{ range $paginator.Pages }}
   {{ $slug := path.Base .File.Dir }}
   {{ $imgPath := printf "originals/%s/%s" $slug .Params.featured }}
   {{ $img := resources.Get $imgPath }}
@@ -12,10 +18,23 @@
     {{ else }}
     <p style="color:red;">No featured image found for: {{ .Params.featured }}</p>
     {{ end }}
+
     <div class="overlay">
       <div class="title">{{ .Title }}</div>
     </div>
   </a>
   {{ end }}
 </div>
+
+{{ if gt $paginator.TotalPages 1 }}
+<nav class="pagination">
+  {{ if $paginator.HasPrev }}
+  <a class="pagination-prev" href="{{ $paginator.Prev.URL }}">Newer</a>
+  {{ end }}
+
+  {{ if $paginator.HasNext }}
+  <a class="pagination-next" href="{{ $paginator.Next.URL }}">Older</a>
+  {{ end }}
+</nav>
+{{ end }}
 {{ end }}

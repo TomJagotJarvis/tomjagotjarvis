@@ -5,8 +5,8 @@ uglyURLs = false
 relativeURLs = true
 canonifyURLs = false
 
-[pagination]
-  pagerSize = 5
+
+pagination.pagerSize = 20
 
 [taxonomies]
   tag = "tags"

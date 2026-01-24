@@ -10,8 +10,8 @@
     {{ end }}
 
     {{ $sorted := sort $posts "Date" "desc" }}
+    {{ range $group := $sorted.GroupByDate "2006" }}
 
-    {{ range $group := $posts.GroupByDate "2006" }}
     <h2>{{ $group.Key }}</h2>
     <ul class="archive-list">
         {{ range $group.Pages }}
