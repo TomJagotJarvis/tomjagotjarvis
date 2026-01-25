@@ -5,8 +5,7 @@ uglyURLs = false
 relativeURLs = true
 canonifyURLs = false
 
-
-pagination.pagerSize = 20
+pagination.pagerSize = 6
 
 [taxonomies]
   tag = "tags"
@@ -16,3 +15,7 @@ post = "/posts/:slug/"
 
 [minify]
   disableXML = true
+
+[params]
+  postImageMax = 1200
+  postImageGutter = 24

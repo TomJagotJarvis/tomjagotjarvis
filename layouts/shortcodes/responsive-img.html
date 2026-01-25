@@ -1,35 +1,21 @@
 {{ $src := .Get "src" }}
 {{ $alt := .Get "alt" | default $src }}
-{{ $slug := path.Base .Page.File.Dir }}
-{{ $img := resources.Get (printf "originals/%s/%s" $slug $src) }}
 
-{{ if $img }}
-{{ .Scratch.Set "small" $img }}
-{{ .Scratch.Set "medium" $img }}
-{{ .Scratch.Set "large" $img }}
+{{ $max := .Site.Params.postImageMax | default 1200 }}
+{{ $gutter := .Site.Params.postImageGutter | default 24 }}
 
-{{ if gt $img.Width 600 }}
-{{ .Scratch.Set "small" ($img.Fit "600x9999 q85") }}
-{{ end }}
-{{ if gt $img.Width 1200 }}
-{{ .Scratch.Set "medium" ($img.Fit "1200x9999 q85") }}
-{{ end }}
-{{ if gt $img.Width 2000 }}
-{{ .Scratch.Set "large" ($img.Fit "2000x9999 q85") }}
-{{ end }}
+{{/* Rendered width is roughly max minus gutters on wide screens */}}
+{{ $renderMax := sub $max (mul $gutter 2) }}
 
-{{ $small := .Scratch.Get "small" }}
-{{ $medium := .Scratch.Get "medium" }}
-{{ $large := .Scratch.Get "large" }}
+{{ $w1 := 700 }}
+{{ $w2 := $renderMax }}
+{{ $w3 := mul $renderMax 2 }}
 
-<picture>
-  <source srcset="{{ $large.RelPermalink }}" media="(min-width: 1201px)">
-  <source srcset="{{ $medium.RelPermalink }}" media="(min-width: 601px)">
-  <img src="{{ $small.RelPermalink }}"
-    srcset="{{ $small.RelPermalink }} 600w, {{ $medium.RelPermalink }} 1200w, {{ $large.RelPermalink }} 2000w"
-    sizes="(max-width: 600px) 600px, (max-width: 1200px) 1200px, 2000px" alt="{{ $alt }}" loading="lazy"
-    style="width:100%;height:auto;">
-</picture>
-{{ else }}
-<p style="color:red;">Image not found: {{ $src }}</p>
-{{ end }}
+{{ partial "responsive-img.html" (dict
+"page" .Page
+"src" $src
+"alt" $alt
+"widths" (slice $w1 $w2 $w3)
+"sizes" (printf "(min-width: %dpx) %dpx, calc(100vw - %dpx)" $max $renderMax (mul $gutter 2))
+"quality" 85
+) }}

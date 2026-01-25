@@ -40,23 +40,6 @@ header {
   text-decoration: underline;
 }
 
-footer {
-  background-color: #f9f9f9;
-  color: #333;
-  padding: 1rem 0;
-  font-size: 0.9rem;
-}
-
-.footer-left {
-  font-weight: 600;
-}
-
-.footer-right a {
-  margin-left: 1rem;
-  text-decoration: none;
-  color: #000;
-}
-
 .posts-list {
   display: flex;
   flex-wrap: wrap;
@@ -105,9 +88,9 @@ footer {
 
 /* Single Post Page */
 .post {
-  max-width: 700px;
+  max-width: 1200px;
   margin: 2rem auto;
-  padding: 0 1rem;
+  padding: 0 clamp(16px, 3vw, 24px);
 }
 
 .post h1 {
@@ -132,15 +115,62 @@ footer {
   display: block;
   width: 100%;
   height: auto;
-  margin: 1.5rem 0;
-  max-width: none;
+  margin: 0;
+  /* picture provides the spacing now */
+  max-width: 100%;
 }
 
-.post-body picture {
+/* --- Post page: readable text width --- */
+.post .text-container {
+  max-width: 800px;
+  /* keep text readable */
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* --- Post images: wider than text, but not full-bleed --- */
+/* Controls how wide images can get on big screens */
+:root {
+  --post-image-max: 1100px;
+  --post-image-pad: 12px;
+}
+
+/* Let post images escape the 800px text column */
+/* .post .post-body picture {
   display: block;
-  width: 100vw;
-  max-width: none;
-  margin-left: calc(-50vw + 50%);
+
+  width: min(var(--post-image-max), calc(100vw - 2 * clamp(16px, 3vw, 24px)));
+  margin: 2rem 0;
+  margin-left: 50%;
+  transform: translateX(-50%);
+
+  padding: var(--post-image-pad);
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  overflow: hidden;
+} */
+
+.post .post-body picture {
+  display: block;
+
+  width: min(var(--post-image-max),
+      calc(100vw - 2 * clamp(16px, 3vw, 24px)));
+
+  margin: 2rem 0;
+  margin-left: 50%;
+  transform: translateX(-50%);
+
+  box-sizing: border-box;
+}
+
+.post .post-body picture img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0;
 }
 
 .pagination {
@@ -205,17 +235,12 @@ footer {
 }
 
 
-
 .text-container {
   max-width: 800px;
   margin: 0 auto;
   padding: 0 1rem;
 }
 
-/* .text-container .posts-list {
-  max-width: 1000px;
-  margin: 0 auto;
-} */
 
 /* Tag page layout alignment */
 .tag-page-container {
@@ -277,7 +302,7 @@ footer {
 
 
 footer a {
-  color: #fff;
+  color: #000;
   text-decoration: underline;
 }
 
@@ -289,24 +314,6 @@ footer a:hover {
   footer {
     font-size: 0.8rem;
     padding: 1.5rem 1rem;
-  }
-}
-
-.footer-inner a:hover {
-  text-decoration: underline;
-}
-
-
-header h1 {
-  font-family: "Playfair Display", serif;
-  font-size: 2.5rem;
-  font-weight: bold;
-  margin: 0;
-}
-
-@media (max-width: 600px) {
-  header h1 {
-    font-size: 1.8rem;
   }
 }
 

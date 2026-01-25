@@ -1,0 +1,45 @@
+{{/*
+Partial: responsive image from Hugo resources.
+
+Expects dict:
+page: . (a Page)
+src: filename relative to originals/<slug>/
+    alt: alt text
+    class: optional class for <img>
+    sizes: optional sizes attribute
+    widths: optional slice of ints (e.g. (slice 480 960 1440))
+    quality: optional int (default 85)
+    */}}
+
+    {{ $page := .page }}
+    {{ $src := .src }}
+    {{ $alt := .alt | default $src }}
+    {{ $class := .class | default "" }}
+    {{ $sizes := .sizes | default "100vw" }}
+    {{ $quality := .quality | default 85 }}
+    {{ $widths := .widths | default (slice 600 1200 2000) }}
+
+    {{ $slug := path.Base $page.File.Dir }}
+    {{ $img := resources.Get (printf "originals/%s/%s" $slug $src) }}
+
+    {{ if not $img }}
+    <p style="color:red;">Image not found: {{ $src }}</p>
+    {{ else }}
+
+    {{ $w1 := index $widths 0 }}
+    {{ $w2 := index $widths 1 }}
+    {{ $w3 := index $widths 2 }}
+
+    {{/* For each slot: resize if needed, otherwise re-encode for optimisation */}}
+    {{ $proc := printf "jpg q%d" $quality }}
+    {{ $small := cond (gt $img.Width $w1) ($img.Fit (printf "%dx9999 q%d" $w1 $quality)) ($img.Process $proc) }}
+    {{ $medium := cond (gt $img.Width $w2) ($img.Fit (printf "%dx9999 q%d" $w2 $quality)) ($img.Process $proc) }}
+    {{ $large := cond (gt $img.Width $w3) ($img.Fit (printf "%dx9999 q%d" $w3 $quality)) ($img.Process $proc) }}
+    <picture>
+        <img src="{{ $small.RelPermalink }}"
+            srcset="{{ $small.RelPermalink }} {{ $w1 }}w, {{ $medium.RelPermalink }} {{ $w2 }}w, {{ $large.RelPermalink }} {{ $w3 }}w"
+            sizes="{{ $sizes }}" alt="{{ $alt }}" loading="lazy" {{ with $class }}class="{{ . }}" {{ end }}
+            style="width:100%;height:auto;">
+    </picture>
+
+    {{ end }}
