@@ -90,7 +90,7 @@ header {
 .post {
   max-width: 1200px;
   margin: 2rem auto;
-  padding: 0 clamp(16px, 3vw, 24px);
+  padding: 0 24px;
 }
 
 .post h1 {
@@ -130,10 +130,15 @@ header {
 
 /* --- Post images: wider than text, but not full-bleed --- */
 /* Controls how wide images can get on big screens */
-:root {
+/* :root {
   --post-image-max: 1100px;
   --post-image-pad: 12px;
+} */
+
+:root {
+  --post-image-max: 1200px;
 }
+
 
 /* Let post images escape the 800px text column */
 /* .post .post-body picture {
@@ -156,8 +161,7 @@ header {
 .post .post-body picture {
   display: block;
 
-  width: min(var(--post-image-max),
-      calc(100vw - 2 * clamp(16px, 3vw, 24px)));
+  width: min(var(--post-image-max), calc(100vw - 48px));
 
   margin: 2rem 0;
   margin-left: 50%;
