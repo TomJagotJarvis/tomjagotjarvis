@@ -27,13 +27,40 @@
 {{ if gt $paginator.TotalPages 1 }}
 <nav class="pagination">
   {{ if $paginator.HasPrev }}
-  <a class="pagination-prev" href="{{ $paginator.Prev.URL }}">Newer</a>
+  <a class="pagination-prev" href="{{ $paginator.Prev.URL }}">← Newer</a>
+  {{ else }}
+  <span class="pagination-prev is-disabled">← Newer</span>
   {{ end }}
 
+  {{ $current := $paginator.PageNumber }}
+  {{ $total := $paginator.TotalPages }}
+  {{ $window := 2 }}
+
+  <a class="pagination-page {{ if eq $current 1 }}is-active{{ end }}" href="{{ $paginator.First.URL }}">1</a>
+
+  {{ if gt (sub $current $window) 2 }}
+  <span class="pagination-ellipsis">…</span>
+  {{ end }}
+
+  {{ range $paginator.Pagers }}
+  {{ $n := .PageNumber }}
+  {{ if and (gt $n 1) (lt $n $total) (ge $n (sub $current $window)) (le $n (add $current $window)) }}
+  <a class="pagination-page {{ if eq $n $current }}is-active{{ end }}" href="{{ .URL }}">{{ $n }}</a>
+  {{ end }}
+  {{ end }}
+
+  {{ if lt (add $current $window) (sub $total 1) }}
+  <span class="pagination-ellipsis">…</span>
+  {{ end }}
+
+  <a class="pagination-page {{ if eq $current $total }}is-active{{ end }}" href="{{ $paginator.Last.URL }}">{{ $total
+    }}</a>
+
   {{ if $paginator.HasNext }}
-  <a class="pagination-next" href="{{ $paginator.Next.URL }}">Older</a>
+  <a class="pagination-next" href="{{ $paginator.Next.URL }}">Older →</a>
+  {{ else }}
+  <span class="pagination-next is-disabled">Older →</span>
   {{ end }}
 </nav>
 {{ end }}
 {{ end }}
-

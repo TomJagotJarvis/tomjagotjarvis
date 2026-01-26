@@ -178,14 +178,36 @@ header {
 }
 
 .pagination {
-  text-align: center;
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  align-items: center;
   margin: 2rem 0;
+  flex-wrap: wrap;
 }
 
 .pagination a {
-  margin: 0 1rem;
   text-decoration: none;
   color: #007acc;
+}
+
+.pagination-page {
+  padding: 0.25rem 0.6rem;
+  border-radius: 8px;
+}
+
+.pagination-page.is-active {
+  font-weight: 600;
+  text-decoration: underline;
+  color: #111;
+}
+
+.pagination-ellipsis {
+  opacity: 0.55;
+}
+
+.is-disabled {
+  opacity: 0.35;
 }
 
 /* Inline Tags */
