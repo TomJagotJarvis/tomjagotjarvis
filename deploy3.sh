@@ -31,7 +31,7 @@ fi
 
 # --- Build -------------------------------------------------------------------
 echo "🏗️  Building site with Hugo…"
-hugo --minify
+hugo --minify --gc --cleanDestinationDir
 
 # --- Sync to S3 (capture output either real or dry) --------------------------
 SYNC_FLAGS=(--delete --exact-timestamps --no-progress)
