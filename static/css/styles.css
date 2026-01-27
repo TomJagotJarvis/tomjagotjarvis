@@ -390,3 +390,38 @@ picture.portrait img {
   display: block;
   margin: 0 auto;
 }
+
+.post-section-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.4rem;
+  margin: 2.5rem auto 1.5rem;
+  max-width: 800px;
+}
+
+.post-centered-text {
+  text-align: center;
+  max-width: 800px;
+  margin: 1.5rem auto;
+}
+
+.post-body .section-heading {
+  font-family: "Libre Baskerville", serif;
+  font-size: clamp(1.4rem, 2.5vw, 1.85rem);
+  font-weight: 700;
+  text-align: center;
+  margin: 3.5rem auto 2.5rem;
+  line-height: 1.25;
+  max-width: 900px;
+}
+
+.post-body .post-centered-text {
+  font-family: "Inter", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 400;
+  text-align: center;
+  margin: 1.5rem auto 2.5rem;
+  line-height: 1.6;
+  max-width: 700px;
+  color: #222;
+}

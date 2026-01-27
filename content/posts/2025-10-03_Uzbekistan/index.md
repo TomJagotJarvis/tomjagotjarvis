@@ -7,7 +7,9 @@ featured: "_DSC2219.jpg"
 tags: ["Uzbekistan","Central Asia", "Tajikistan", "Tashkent", "Khiva", "Bukhara", "Samarkand", "Khujand","Asia"]
 ---
 
+{{< section-title >}}
 Tashkent
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC1727.jpg" alt="_DSC1727" >}}
 
@@ -21,7 +23,9 @@ Tashkent
 
 {{< responsive-img src="_DSC1770.jpg" alt="_DSC1770" >}}
 
+{{< section-title >}}
 Khujund, Tajikistan
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC1773.jpg" alt="_DSC1773" >}}
 
@@ -55,7 +59,9 @@ Khujund, Tajikistan
 
 {{< responsive-img src="_DSC1865.jpg" alt="_DSC1865" >}}
 
+{{< section-title >}}
 Tashkent
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC1869.jpg" alt="_DSC1869" >}}
 
@@ -89,7 +95,9 @@ Tashkent
 
 {{< responsive-img src="_DSC1944.jpg" alt="_DSC1944" >}}
 
+{{< section-title >}}
 Khiva
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC1953.jpg" alt="_DSC1953" >}}
 
@@ -181,7 +189,9 @@ Khiva
 
 {{< responsive-img src="_DSC2313.jpg" alt="_DSC2313" >}}
 
+{{< section-title >}}
 Bukhara
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC2820.jpg" alt="_DSC2820" >}}
 
@@ -281,7 +291,9 @@ Bukhara
 
 {{< responsive-img src="_DSC3201.jpg" alt="_DSC3201" >}}
 
+{{< section-title >}}
 Samarkand
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC3207.jpg" alt="_DSC3207" >}}
 

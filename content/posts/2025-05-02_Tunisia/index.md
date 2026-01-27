@@ -67,7 +67,9 @@ tags: ["Tunisia","Africa"]
 
 {{< responsive-img src="_DSC1065.jpg" alt="_DSC1065" >}}
 
+{{< centered >}}
 Speedy the tortoise
+{{< /centered >}}
 
 {{< responsive-img src="_DSC1075.jpg" alt="_DSC1075" >}}
 

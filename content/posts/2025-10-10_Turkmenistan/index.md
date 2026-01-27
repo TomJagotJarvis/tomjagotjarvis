@@ -7,7 +7,10 @@ featured: "_DSC2519.jpg"
 tags: ["Turkmenistan","Darvaza","Door to Hell", "Gates of Hell","Ashgabat", "Nisa", "Merv","Asia"]
 ---
 
+
+{{< section-title >}}
 Darvaza Gas Crater, also known as the Gates of Hell
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC2330.jpg" alt="_DSC2330" >}}
 
@@ -25,7 +28,9 @@ Darvaza Gas Crater, also known as the Gates of Hell
 
 {{< responsive-img src="_DSC2428.jpg" alt="_DSC2428" >}}
 
+{{< section-title >}}
 Ashgabat
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC2458.jpg" alt="_DSC2458" >}}
 
@@ -51,7 +56,9 @@ Ashgabat
 
 {{< responsive-img src="_DSC2576.jpg" alt="_DSC2576" >}}
 
+{{< section-title >}}
 Nisa
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC2585.jpg" alt="_DSC2585" >}}
 
@@ -63,7 +70,9 @@ Nisa
 
 {{< responsive-img src="_DSC2615.jpg" alt="_DSC2615" >}}
 
+{{< section-title >}}
 Bask to Ashgabat
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC2635.jpg" alt="_DSC2635" >}}
 
@@ -99,7 +108,9 @@ Bask to Ashgabat
 
 {{< responsive-img src="_DSC2744.jpg" alt="_DSC2744" >}}
 
+{{< section-title >}}
 Merv
+{{< /section-title >}}
 
 {{< responsive-img src="_DSC2751.jpg" alt="_DSC2751" >}}
 
