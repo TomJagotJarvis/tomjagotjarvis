@@ -42,7 +42,8 @@ else
   echo "🟡 Syncing changes to s3://$BUCKET …"
 fi
 
-SYNC_OUTPUT="$(aws s3 sync public/ "s3://$BUCKET" "${SYNC_FLAGS[@]}" || true)"
+# SYNC_OUTPUT="$(aws s3 sync public/ "s3://$BUCKET" "${SYNC_FLAGS[@]}" || true)"
+SYNC_OUTPUT="$(aws s3 sync public/ "s3://$BUCKET" "${SYNC_FLAGS[@]}")"
 
 # --- Parse changed paths from sync output ------------------------------------
 UPLOADS=$(echo "$SYNC_OUTPUT" | awk '/^upload:/ {print $2}' | sed 's|^public||')
