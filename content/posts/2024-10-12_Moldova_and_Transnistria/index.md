@@ -4,7 +4,7 @@ date: 2024-10-12 00:00:00 +0000 +0000
 draft: false
 type: "post"
 featured: "_DSC6743.jpg"
-tags: ["Moldova","Europe"]
+tags: ["Moldova","Europe","Transnistria"]
 ---
 
 {{< responsive-img src="_DSC6628.jpg" alt="_DSC6628" >}}
