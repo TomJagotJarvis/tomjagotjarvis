@@ -4,7 +4,7 @@ date: 2025-12-25 00:00:00 +0000 GMT
 draft: false
 type: "post"
 featured: "_DSC3817.jpg"
-tags: ["Saudi Arabia","Middle East"]
+tags: ["Saudi Arabia","Middle East","Asia"]
 ---
 
 {{< responsive-img src="_DSC3598.jpg" alt="_DSC3598" >}}
