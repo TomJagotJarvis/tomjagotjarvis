@@ -85,7 +85,7 @@ header {
 
 /* Single Post Page */
 .post {
-  max-width: 1200px;
+  max-width: 1600px;
   margin: 2rem auto;
   padding: 0 24px;
 }
@@ -133,7 +133,7 @@ header {
 } */
 
 :root {
-  --post-image-max: 1200px;
+  --post-image-max: 1500px;
 }
 
 

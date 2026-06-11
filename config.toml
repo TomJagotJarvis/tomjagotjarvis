@@ -17,5 +17,5 @@ post = "/posts/:slug/"
   disableXML = true
 
 [params]
-  postImageMax = 1200
+  postImageMax = 1500
   postImageGutter = 24
