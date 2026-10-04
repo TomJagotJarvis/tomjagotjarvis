@@ -1,5 +1,5 @@
 ---
-title: "Vienna_&_Bratislava"
+title: "Vienna & Bratislava"
 date: 2024-10-19 00:00:00 +0000 +0000
 draft: false
 type: "post"
