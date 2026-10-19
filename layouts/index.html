@@ -6,7 +6,7 @@
   {{/* Paginate newest-first */}}
   {{ $paginator := .Paginate ($posts.ByDate.Reverse) }}
 
-  {{ range $paginator.Pages }}
+  {{ range $i, $p := $paginator.Pages }}
   <a href="{{ .RelPermalink }}" class="post-preview">
     {{ partial "responsive-img.html" (dict
     "page" .
@@ -15,6 +15,7 @@
     "widths" (slice 480 960 1440)
     "sizes" "(min-width: 1100px) 33vw, (min-width: 700px) 50vw, 100vw"
     "quality" 82
+    "eager" (lt $i 2)
     ) }}
 
     <div class="overlay">

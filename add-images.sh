@@ -26,30 +26,33 @@ if [ ! -d "$ASSET_DIR" ]; then
   exit 1
 fi
 
-# Backup index.md
-cp "$MD_FILE" "$MD_FILE.bak"
-
-# Find where front matter ends (after 2nd ---)
-HEADER_END_LINE=$(awk '/^---$/{c++} c==2 {print NR; exit}' "$MD_FILE")
-if [ -z "$HEADER_END_LINE" ]; then
+# Check front matter is present (two --- lines)
+if [ "$(grep -c '^---$' "$MD_FILE")" -lt 2 ]; then
   echo "❌ Front matter not properly formatted in $MD_FILE"
   exit 1
 fi
 
-# Extract front matter
-head -n "$HEADER_END_LINE" "$MD_FILE" > "$MD_FILE.tmp"
-echo "" >> "$MD_FILE.tmp"
+# Backup index.md
+cp "$MD_FILE" "$MD_FILE.bak"
 
-# Append responsive-img shortcodes for each image in the assets directory
+# Match extensions case-insensitively (.jpg and .JPG)
+shopt -s nullglob nocaseglob
+
+# Append shortcodes for images not already in the post.
+# Existing body text (section titles, captions, etc.) is preserved.
+#
+# alt is left empty on purpose: the shortcode falls back to
+# "Photo from <post title>". Replace it with a real description of each photo.
+added=0
 for img in "$ASSET_DIR"/*.{jpg,jpeg,png,webp}; do
   [ -f "$img" ] || continue
   filename=$(basename "$img")
-  alt_text=$(echo "$filename" | sed -E 's/\.[^.]+$//' | tr '-' ' ' | sed -E 's/\b(.)/\u\1/g')
-  echo "{{< responsive-img src=\"$filename\" alt=\"$alt_text\" >}}" >> "$MD_FILE.tmp"
-  echo "" >> "$MD_FILE.tmp"
+  if grep -qF "src=\"$filename\"" "$MD_FILE"; then
+    continue
+  fi
+  printf '\n{{< responsive-img src="%s" alt="" >}}\n' "$filename" >> "$MD_FILE"
+  added=$((added + 1))
 done
 
-# Replace the index.md file
-mv "$MD_FILE.tmp" "$MD_FILE"
-
-echo "✅ Updated $MD_FILE with responsive image shortcodes. Backup: index.md.bak"
+echo "✅ Added $added image shortcode(s) to $MD_FILE. Backup: index.md.bak"
+echo "   Remember to fill in alt=\"\" with a description of each photo."

@@ -2,14 +2,18 @@
 <div class="text-container">
   <h1 class="tag-heading">{{ .Title | title }}</h1>
   <div class="posts-list">
-    {{ range .Pages }}
+    {{ range $i, $p := .Pages }}
     <a href="{{ .RelPermalink }}" class="post-preview">
-      {{ $slug := path.Base .File.Dir }}
-      {{ $img := resources.Get (printf "originals/%s/%s" $slug .Params.featured) }}
-      {{ with $img }}
-      {{ $thumb := .Fit "600x9999 q85" }}
-      <img src="{{ $thumb.RelPermalink }}" alt="{{ $.Title }}" class="thumbnail">
-      {{ end }}
+      {{ partial "responsive-img.html" (dict
+      "page" .
+      "src" .Params.featured
+      "alt" .Title
+      "class" "thumbnail"
+      "widths" (slice 480 960 1440)
+      "sizes" "(min-width: 700px) 600px, 100vw"
+      "quality" 82
+      "eager" (lt $i 2)
+      ) }}
       <div class="overlay">
         <div class="title">{{ .Title }}</div>
       </div>
