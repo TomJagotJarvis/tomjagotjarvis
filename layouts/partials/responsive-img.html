@@ -1,45 +1,55 @@
 {{/*
-Partial: responsive image from Hugo resources.
+  Partial: responsive image from Hugo resources.
 
-Expects dict:
-page: . (a Page)
-src: filename relative to originals/<slug>/
-    alt: alt text
-    class: optional class for <img>
-    sizes: optional sizes attribute
-    widths: optional slice of ints (e.g. (slice 480 960 1440))
+  Expects dict:
+    page:    . (a Page)
+    src:     filename relative to originals/<slug>/
+    alt:     alt text
+    class:   optional class for <img>
+    sizes:   optional sizes attribute
+    widths:  optional slice of 3 ints (e.g. (slice 480 960 1440))
     quality: optional int (default 85)
-    */}}
+    eager:   optional bool; load immediately with high priority (use for the
+             first, above-the-fold image) instead of lazy-loading
+*/}}
 
-    {{ $page := .page }}
-    {{ $src := .src }}
-    {{ $alt := .alt | default $src }}
-    {{ $class := .class | default "" }}
-    {{ $sizes := .sizes | default "100vw" }}
-    {{ $quality := .quality | default 85 }}
-    {{ $widths := .widths | default (slice 600 1200 2000) }}
+{{ $page := .page }}
+{{ $src := .src }}
+{{ $alt := .alt | default $src }}
+{{ $class := .class | default "" }}
+{{ $sizes := .sizes | default "100vw" }}
+{{ $quality := .quality | default 85 }}
+{{ $widths := .widths | default (slice 600 1200 2000) }}
+{{ $eager := .eager | default false }}
 
-    {{ $slug := path.Base $page.File.Dir }}
-    {{ $img := resources.Get (printf "originals/%s/%s" $slug $src) }}
+{{ $slug := path.Base $page.File.Dir }}
+{{ $img := resources.Get (printf "originals/%s/%s" $slug $src) }}
 
-    {{ if not $img }}
-    <p style="color:red;">Image not found: {{ $src }}</p>
+{{ if not $img }}
+  {{ warnf "responsive-img: image not found: originals/%s/%s (%s)" $slug $src $page.File.Path }}
+{{ else }}
+  {{/* For each width: resize if larger, otherwise just re-encode.
+       Uses if/else (not cond) so only one image operation runs per slot. */}}
+  {{ $proc := printf "jpg q%d" $quality }}
+  {{ $out := slice }}
+  {{ range $widths }}
+    {{ if gt $img.Width . }}
+      {{ $out = $out | append ($img.Fit (printf "%dx9999 q%d" . $quality)) }}
     {{ else }}
-
-    {{ $w1 := index $widths 0 }}
-    {{ $w2 := index $widths 1 }}
-    {{ $w3 := index $widths 2 }}
-
-    {{/* For each slot: resize if needed, otherwise re-encode for optimisation */}}
-    {{ $proc := printf "jpg q%d" $quality }}
-    {{ $small := cond (gt $img.Width $w1) ($img.Fit (printf "%dx9999 q%d" $w1 $quality)) ($img.Process $proc) }}
-    {{ $medium := cond (gt $img.Width $w2) ($img.Fit (printf "%dx9999 q%d" $w2 $quality)) ($img.Process $proc) }}
-    {{ $large := cond (gt $img.Width $w3) ($img.Fit (printf "%dx9999 q%d" $w3 $quality)) ($img.Process $proc) }}
-    <picture>
-        <img src="{{ $small.RelPermalink }}"
-            srcset="{{ $small.RelPermalink }} {{ $w1 }}w, {{ $medium.RelPermalink }} {{ $w2 }}w, {{ $large.RelPermalink }} {{ $w3 }}w"
-            sizes="{{ $sizes }}" alt="{{ $alt }}" loading="lazy" {{ with $class }}class="{{ . }}" {{ end }}
-            style="width:100%;height:auto;">
-    </picture>
-
+      {{ $out = $out | append ($img.Process $proc) }}
     {{ end }}
+  {{ end }}
+  {{ $small := index $out 0 }}
+  {{ $srcset := slice }}
+  {{ range $i, $w := $widths }}
+    {{ $srcset = $srcset | append (printf "%s %dw" (index $out $i).RelPermalink $w) }}
+  {{ end }}
+  <picture>
+    <img src="{{ $small.RelPermalink }}"
+      srcset="{{ delimit $srcset ", " }}"
+      sizes="{{ $sizes }}" alt="{{ $alt }}"
+      width="{{ $small.Width }}" height="{{ $small.Height }}"
+      {{ if $eager }}loading="eager" fetchpriority="high"{{ else }}loading="lazy" decoding="async"{{ end }}
+      {{ with $class }}class="{{ . }}"{{ end }}>
+  </picture>
+{{ end }}

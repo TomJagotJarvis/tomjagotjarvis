@@ -108,15 +108,6 @@ header {
   margin-bottom: 1.5rem;
 }
 
-.post-body img {
-  display: block;
-  width: 100%;
-  height: auto;
-  margin: 0;
-  /* picture provides the spacing now */
-  max-width: 100%;
-}
-
 /* --- Post page: readable text width --- */
 .post .text-container {
   max-width: 800px;
@@ -126,34 +117,10 @@ header {
 }
 
 /* --- Post images: wider than text, but not full-bleed --- */
-/* Controls how wide images can get on big screens */
-/* :root {
-  --post-image-max: 1100px;
-  --post-image-pad: 12px;
-} */
-
 :root {
   --post-image-max: 1500px;
 }
 
-
-/* Let post images escape the 800px text column */
-/* .post .post-body picture {
-  display: block;
-
-  width: min(var(--post-image-max), calc(100vw - 2 * clamp(16px, 3vw, 24px)));
-  margin: 2rem 0;
-  margin-left: 50%;
-  transform: translateX(-50%);
-
-  padding: var(--post-image-pad);
-  background: #fff;
-  border: 1px solid rgba(0, 0, 0, 0.10);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  box-sizing: border-box;
-  overflow: hidden;
-} */
 
 .post .post-body picture {
   display: block;
@@ -232,7 +199,6 @@ header {
   font-size: 2rem;
   font-family: "Playfair Display", serif;
   font-weight: bold;
-  /* border-bottom: 2px solid #eee; */
   display: block;
   padding-bottom: 0.2rem;
   margin: 2rem auto 1rem;
@@ -250,10 +216,6 @@ header {
 @media (max-width: 600px) {
   .tag-heading {
     font-size: 1.5rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    text-align: center;
-    /* <-- should also be center here */
   }
 }
 
@@ -264,13 +226,6 @@ header {
   padding: 0 1rem;
 }
 
-
-/* Tag page layout alignment */
-.tag-page-container {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 0 1rem;
-}
 
 /* Tags index page (e.g. /tags/) */
 
@@ -372,28 +327,12 @@ footer a:hover {
   margin-left: 0.5rem;
 }
 
-picture.portrait img {
-  max-width: 60vw;
-  /* Max 60% of the viewport width */
-  width: 100%;
-  margin: 2rem auto;
-  display: block;
-}
-
 .thumbnail {
   max-width: 600px;
   width: 100%;
   height: auto;
   display: block;
   margin: 0 auto;
-}
-
-.post-section-title {
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.4rem;
-  margin: 2.5rem auto 1.5rem;
-  max-width: 800px;
 }
 
 .post-centered-text {

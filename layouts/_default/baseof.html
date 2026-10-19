@@ -4,7 +4,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{ .Title }}</title>
+  <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+  {{ $desc := "" }}
+  {{ with .Description }}{{ $desc = . }}{{ else }}{{ if .IsPage }}{{ $desc = printf "Travel photography from %s by %s." .Title site.Title }}{{ else }}{{ $desc = site.Params.description }}{{ end }}{{ end }}
+  <meta name="description" content="{{ $desc }}">
+  <link rel="canonical" href="{{ .Permalink }}">
+  {{ with .OutputFormats.Get "rss" }}<link rel="alternate" type="application/rss+xml" href="{{ .Permalink }}" title="{{ site.Title }}">{{ end }}
+  {{ partial "opengraph.html" . }}
+  {{ partial "twitter_cards.html" . }}
+  {{ with and .IsPage .Params.featured }}
+    {{ with resources.Get (printf "originals/%s/%s" (path.Base $.File.Dir) .) }}
+      {{ $og := .Fit "1200x1200 q80 jpg" }}
+  <meta property="og:image" content="{{ $og.Permalink }}">
+  <meta property="og:image:width" content="{{ $og.Width }}">
+  <meta property="og:image:height" content="{{ $og.Height }}">
+  <meta name="twitter:image" content="{{ $og.Permalink }}">
+    {{ end }}
+  {{ end }}
 
   <!-- Google Fonts (non-@import) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

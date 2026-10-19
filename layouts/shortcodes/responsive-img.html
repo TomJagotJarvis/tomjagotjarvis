@@ -1,5 +1,14 @@
 {{ $src := .Get "src" }}
-{{ $alt := .Get "alt" | default $src }}
+{{ $alt := .Get "alt" }}
+
+{{/* Older posts used the camera filename as alt text (e.g. "_MG_6993"),
+     which is meaningless to screen readers. Treat an alt that is empty or
+     matches the filename as missing, and fall back to a descriptive default.
+     Write a real description in the shortcode to override this. */}}
+{{ $base := replaceRE `\.[^.]+$` "" (path.Base $src) }}
+{{ if or (not $alt) (eq $alt $base) (eq $alt $src) }}
+  {{ $alt = printf "Photo from %s" .Page.Title }}
+{{ end }}
 
 {{ $max := .Site.Params.postImageMax | default 1200 }}
 {{ $gutter := .Site.Params.postImageGutter | default 24 }}
@@ -18,4 +27,5 @@
 "widths" (slice $w1 $w2 $w3)
 "sizes" (printf "(min-width: %dpx) %dpx, calc(100vw - %dpx)" $max $renderMax (mul $gutter 2))
 "quality" 85
+"eager" (eq .Ordinal 0)
 ) }}

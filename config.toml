@@ -1,5 +1,7 @@
 baseURL = "https://tomjagotjarvis.com/"
 title = "Tom Jagot-Jarvis"
+languageCode = "en-gb"
+enableRobotsTXT = true
 publishDir = "public"
 uglyURLs = false
 relativeURLs = true
@@ -10,12 +12,10 @@ pagination.pagerSize = 6
 [taxonomies]
   tag = "tags"
 
-[permalinks]
-post = "/posts/:slug/"
-
 [minify]
   disableXML = true
 
 [params]
+  description = "Travel photography by Tom Jagot-Jarvis."
   postImageMax = 1500
   postImageGutter = 24
