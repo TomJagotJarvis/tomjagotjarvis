@@ -1,5 +1,24 @@
 {{ $src := .Get "src" }}
-{{ $alt := .Get "alt" | default $src }}
+{{ $alt := .Get "alt" }}
+
+{{/* Count responsive photographs independently of all other shortcode types. */}}
+{{ $imageIndex := .Page.Store.Get "responsiveImageCount" | default 0 }}
+{{ .Page.Store.Add "responsiveImageCount" 1 }}
+
+{{/* Detect filename-derived alt text even when punctuation, underscores,
+     hyphens, spaces, case, or the extension have been transformed. Genuine
+     author descriptions are preserved unchanged. */}}
+{{ $srcBase := replaceRE `(?i)\.(jpe?g|png|webp)$` "" (path.Base $src) }}
+{{ $altBase := replaceRE `(?i)\.(jpe?g|png|webp)$` "" $alt }}
+{{ $normalizedSrc := replaceRE `[^a-z0-9]` "" (lower $srcBase) }}
+{{ $normalizedAlt := replaceRE `[^a-z0-9]` "" (lower $altBase) }}
+{{ $needsDescription := or (not $alt) (eq $normalizedAlt $normalizedSrc) }}
+{{ if $needsDescription }}
+  {{/* Photographs are primary content, so do not hide them with alt="".
+       This honest, unique interim fallback supplies series context and an
+       ordinal without inventing a visual description. See readme.md. */}}
+  {{ $alt = printf "%s — untitled photograph %d (description pending)" .Page.Title (add $imageIndex 1) }}
+{{ end }}
 
 {{ $max := .Site.Params.postImageMax | default 1200 }}
 {{ $gutter := .Site.Params.postImageGutter | default 24 }}
@@ -18,4 +37,5 @@
 "widths" (slice $w1 $w2 $w3)
 "sizes" (printf "(min-width: %dpx) %dpx, calc(100vw - %dpx)" $max $renderMax (mul $gutter 2))
 "quality" 85
+"eager" (eq $imageIndex 0)
 ) }}

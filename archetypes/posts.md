@@ -8,5 +8,3 @@ tags: ["London",]
 ---
 
 Start your story here.
-
-{{< responsive-img src="image.jpg" alt="Description" >}}
