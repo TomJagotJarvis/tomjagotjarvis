@@ -46,8 +46,8 @@ fi
 SYNC_OUTPUT="$(aws s3 sync public/ "s3://$BUCKET" "${SYNC_FLAGS[@]}")"
 
 # --- Parse changed paths from sync output ------------------------------------
-UPLOADS=$(echo "$SYNC_OUTPUT" | awk '/^upload:/ {print $2}' | sed 's|^public||')
-DELETES=$(echo "$SYNC_OUTPUT" | awk '/^delete:/ {print $2}' | sed "s|^s3://$BUCKET||")
+UPLOADS=$(echo "$SYNC_OUTPUT" | awk '{ for (i=1; i<=NF; i++) if ($i == "upload:") { print $(i+1); break } }' | sed 's|^public||')
+DELETES=$(echo "$SYNC_OUTPUT" | awk '{ for (i=1; i<=NF; i++) if ($i == "delete:") { print $(i+1); break } }' | sed "s|^s3://$BUCKET||")
 
 CHANGED=$(
   printf "%s\n%s\n" "$UPLOADS" "$DELETES" \
@@ -67,6 +67,7 @@ FIXED=(
   "/archive/index.html"
   "/sitemap.xml"
   "/index.xml"
+  "/robots.txt"
 )
 
 # OPTIONAL: add targeted paths here when you change non-HTML assets.

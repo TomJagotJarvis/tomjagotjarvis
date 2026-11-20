@@ -7,6 +7,23 @@ body {
   color: #111;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+a:focus-visible {
+  outline: 3px solid #005ea8;
+  outline-offset: 3px;
+}
+
 /* Header and Footer */
 header {
   background: #fff;
@@ -70,7 +87,7 @@ header {
   bottom: 0;
   left: 0;
   width: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.68);
   color: white;
   text-align: center;
   padding: 0.75rem 0.65rem;
@@ -81,6 +98,9 @@ header {
 
 .overlay .title {
   font-weight: bold;
+  font-size: inherit;
+  line-height: inherit;
+  margin: 0;
 }
 
 /* Single Post Page */
@@ -98,7 +118,7 @@ header {
 
 .post time {
   display: block;
-  color: #777;
+  color: #666;
   margin-bottom: 1rem;
   font-size: 0.95rem;
 }
@@ -197,7 +217,7 @@ header {
 
 .tag-heading {
   font-size: 2rem;
-  font-family: "Playfair Display", serif;
+  font-family: "Libre Baskerville", serif;
   font-weight: bold;
   display: block;
   padding-bottom: 0.2rem;
@@ -299,7 +319,7 @@ footer a:hover {
   font-size: 2rem;
   margin-top: 2rem;
   margin-bottom: 1rem;
-  font-family: "Playfair Display", serif;
+  font-family: "Libre Baskerville", serif;
 }
 
 .archive-list {

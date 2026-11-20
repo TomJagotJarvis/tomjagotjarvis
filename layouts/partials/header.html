@@ -1,9 +1,9 @@
 <header>
   <a href="{{ "/" | relURL }}" class="site-title">Tom Jagot-Jarvis</a>
-  <nav class="nav-links">
-    <a href="{{ "/" | relURL }}">Home</a>
-    <a href="{{ "/tags/" | relURL }}">Tags</a>
-    <a href="{{ "/archive/" | relURL }}">Archive</a>
+  <nav class="nav-links" aria-label="Primary navigation">
+    <a href="{{ "/" | relURL }}"{{ if .IsHome }} aria-current="page"{{ end }}>Home</a>
+    <a href="{{ "/tags/" | relURL }}"{{ if or (eq .Kind "taxonomy") (eq .Kind "term") }} aria-current="page"{{ end }}>Tags</a>
+    <a href="{{ "/archive/" | relURL }}"{{ if eq .Layout "archive" }} aria-current="page"{{ end }}>Archive</a>
     <a href="https://www.instagram.com/tomjagotjarvis/" target="_blank" rel="noopener noreferrer">Instagram</a>
   </nav>
 </header>

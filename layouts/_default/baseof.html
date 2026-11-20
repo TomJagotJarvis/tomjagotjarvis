@@ -1,5 +1,7 @@
+{{/* Reset per-page shortcode state before metadata partials can render content. */}}
+{{ if .IsPage }}{{ .Store.Set "responsiveImageCount" 0 }}{{ end }}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ site.Language.Locale }}">
 
 <head>
   <meta charset="UTF-8" />
@@ -26,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Inter:wght@300;400;500&display=swap">
+    href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@700&family=Inter:wght@400;500&display=swap">
 
   <!-- Site CSS via Hugo Pipes (minify + fingerprint) -->
   {{ $css := resources.Get "css/styles.css" | minify | fingerprint }}
