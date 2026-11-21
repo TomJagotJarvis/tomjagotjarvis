@@ -2,6 +2,7 @@
 /public/
 /resources/
 /hugo_stats.json
+/.deploy/
 
 # Build locks
 .hugo_build.lock

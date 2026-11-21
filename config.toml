@@ -6,6 +6,7 @@ publishDir = "public"
 uglyURLs = false
 relativeURLs = true
 canonifyURLs = false
+ignoreFiles = ['\.bak(\..*)?$', '(^|/)\.DS_Store$']
 
 pagination.pagerSize = 6
 

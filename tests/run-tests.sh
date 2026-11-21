@@ -53,6 +53,8 @@ cp -R "$ROOT/archetypes" "$SITE/"
 cp -R "$ROOT/assets/css" "$SITE/assets/"
 cp -R "$ROOT/tests/fixtures/assets/originals" "$SITE/assets/"
 cp -R "$ROOT/tests/fixtures/content" "$SITE/"
+printf '%s\n' 'must not be published' > "$SITE/content/posts/image-first/index.md.bak"
+printf '%s\n' 'must not be published' > "$SITE/content/posts/image-first/.DS_Store"
 
 BUILD_LOG="$TMP_ROOT/hugo-build.log"
 if ! hugo --source "$SITE" \
@@ -82,6 +84,11 @@ for generated in \
   [ -f "$SITE/public/$generated" ] || fail "generated page exists: $generated"
 done
 pass "homepage, posts, taxonomy, archive, robots, and sitemap are generated"
+
+if find "$SITE/public" -type f \( -name '*.bak' -o -name '.DS_Store' \) | grep . >/dev/null; then
+  fail "backup and Finder files are excluded from Hugo output"
+fi
+pass "backup and Finder files are excluded from Hugo output"
 
 POST_HTML="$SITE/public/posts/image-first/index.html"
 SECTION_HTML="$SITE/public/posts/section-first/index.html"
@@ -273,17 +280,108 @@ fi
 pass "add-images errors return a non-zero status"
 
 DEPLOY_SITE="$TMP_ROOT/deploy-site"
-mkdir -p "$DEPLOY_SITE/bin" "$DEPLOY_SITE/public"
+mkdir -p "$DEPLOY_SITE/bin" "$DEPLOY_SITE/assets/css" "$DEPLOY_SITE/content" "$DEPLOY_SITE/layouts"
 cp "$ROOT/deploy.sh" "$DEPLOY_SITE/deploy.sh"
 chmod +x "$DEPLOY_SITE/deploy.sh"
 printf '%s\n' 'BUCKET=test-bucket' 'DIST_ID=test-distribution' > "$DEPLOY_SITE/.env"
-printf '%s\n' '#!/bin/bash' 'exit 0' > "$DEPLOY_SITE/bin/hugo"
-printf '%s\n' '#!/bin/bash' 'if [ "${1:-}" = "s3" ]; then' '  echo "(dryrun) upload: public/posts/example/index.html to s3://test-bucket/posts/example/index.html"' '  echo "(dryrun) delete: s3://test-bucket/old/index.html"' '  exit 0' 'fi' 'exit 99' > "$DEPLOY_SITE/bin/aws"
+printf '%s\n' 'baseURL = "https://example.test/"' > "$DEPLOY_SITE/config.toml"
+printf '%s\n' 'body {}' > "$DEPLOY_SITE/assets/css/styles.css"
+printf '%s\n' 'fixture content' > "$DEPLOY_SITE/content/index.md"
+printf '%s\n' 'fixture layout' > "$DEPLOY_SITE/layouts/index.html"
+cat > "$DEPLOY_SITE/bin/hugo" <<'HUGO_MOCK'
+#!/bin/bash
+printf '%s\n' "$*" >> "$HUGO_LOG"
+if [ "${1:-}" = version ]; then
+  echo 'hugo v0.test+extended'
+  exit 0
+fi
+rm -rf public
+mkdir -p public/posts/example public/css public/originals/example
+printf '%s\n' '<html>home</html>' > public/index.html
+printf '%s\n' '<html>post</html>' > public/posts/example/index.html
+printf '%s\n' 'User-agent: *' > public/robots.txt
+printf '%s\n' 'css' > public/css/styles.min.abcdef0123456789.css
+printf '%s\n' 'jpeg bytes' > public/originals/example/photo_hu_abcdef.jpg
+HUGO_MOCK
+cat > "$DEPLOY_SITE/bin/aws" <<'AWS_MOCK'
+#!/bin/bash
+printf '%s\n' "$*" >> "$AWS_LOG"
+if [ "${1:-}" = s3 ]; then
+  echo '(dryrun) upload: public/posts/example/index.html to s3://test-bucket/posts/example/index.html'
+  echo '(dryrun) upload: public/robots.txt to s3://test-bucket/robots.txt'
+  echo '(dryrun) delete: s3://test-bucket/old/index.html'
+  exit 0
+fi
+if [ "${1:-}" = cloudfront ] && [ "${2:-}" = create-invalidation ]; then
+  exit 0
+fi
+exit 99
+AWS_MOCK
 chmod +x "$DEPLOY_SITE/bin/hugo" "$DEPLOY_SITE/bin/aws"
-(cd "$DEPLOY_SITE" && PATH="$DEPLOY_SITE/bin:$PATH" ./deploy.sh --dry-run > "$TMP_ROOT/deploy-dry-run.log")
+export HUGO_LOG="$TMP_ROOT/hugo-mock.log"
+export AWS_LOG="$TMP_ROOT/aws-mock.log"
+: > "$HUGO_LOG"
+: > "$AWS_LOG"
+
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --build-only > "$TMP_ROOT/deploy-build.log")
+assert_contains '^STATE_VERSION=1$' "$DEPLOY_SITE/.deploy/build-state" "build-only records deployment state"
+assert_contains 'panicOnWarning' "$HUGO_LOG" "deployment build treats Hugo warnings as errors"
+assert_not_contains '^s3 |^cloudfront ' "$AWS_LOG" "build-only never contacts AWS"
+
+printf '%s\n' 'imageoptim output' >> "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg"
+optimised_hash=$(shasum -a 256 "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg" | awk '{print $1}')
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run > "$TMP_ROOT/deploy-dry-run.log")
+after_dry_run_hash=$(shasum -a 256 "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg" | awk '{print $1}')
+[ "$optimised_hash" = "$after_dry_run_hash" ] || fail "dry-run preserves optimised output bytes"
+pass "dry-run preserves optimised output bytes"
 assert_contains '/posts/example/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run parses uploaded paths"
+assert_contains '/posts/example/$' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates the clean trailing-slash viewer path"
+assert_contains '/posts/example$' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates the clean no-slash viewer path"
 assert_contains '/old/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run parses deleted paths"
-assert_contains '/robots\.txt' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates robots.txt"
+assert_contains '/robots\.txt' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates changed robots.txt"
+assert_contains 'public,max-age=31536000,immutable' "$AWS_LOG" "fingerprinted assets receive immutable caching"
+assert_contains 'public,max-age=0,s-maxage=300,must-revalidate' "$AWS_LOG" "documents receive short revalidated caching"
+assert_contains 'public,max-age=86400' "$AWS_LOG" "other static files receive bounded caching"
+assert_contains 's3 sync .* --delete ' "$AWS_LOG" "all cache classes retain deletion handling"
+assert_not_contains '^cloudfront ' "$AWS_LOG" "dry-run never creates a CloudFront invalidation"
+
+cp "$DEPLOY_SITE/public/index.html" "$TMP_ROOT/previewed-index.html"
+printf '%s\n' 'changed after preview' >> "$DEPLOY_SITE/public/index.html"
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build >/dev/null 2>&1); then
+  fail "deployment rejects output changed after preview"
+fi
+pass "deployment rejects output changed after preview"
+cp "$TMP_ROOT/previewed-index.html" "$DEPLOY_SITE/public/index.html"
+
+: > "$AWS_LOG"
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build > "$TMP_ROOT/deploy-apply.log")
+assert_contains '^cloudfront create-invalidation ' "$AWS_LOG" "reviewed deployment creates targeted invalidations"
+assert_contains '"Quantity":[2-9][0-9]*' "$AWS_LOG" "invalidation request batches distinct paths"
+
+printf '%s\n' 'source changed' >> "$DEPLOY_SITE/content/index.md"
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run >/dev/null 2>&1); then
+  fail "deployment rejects stale output after a source change"
+fi
+pass "deployment rejects stale output after a source change"
+printf '%s\n' 'fixture content' > "$DEPLOY_SITE/content/index.md"
+
+touch "$DEPLOY_SITE/public/leak.bak"
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run >/dev/null 2>&1); then
+  fail "deployment rejects backup files in public output"
+fi
+pass "deployment rejects backup files in public output"
+rm "$DEPLOY_SITE/public/leak.bak"
+
+: > "$AWS_LOG"
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run --refresh-metadata > "$TMP_ROOT/deploy-refresh.log")
+assert_contains '^s3 cp ' "$AWS_LOG" "metadata refresh re-uploads unchanged objects"
+assert_contains '^/\*$' "$TMP_ROOT/deploy-refresh.log" "metadata refresh previews a one-time full invalidation"
+assert_not_contains '^cloudfront ' "$AWS_LOG" "metadata refresh dry-run cannot invalidate CloudFront"
+
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build >/dev/null 2>&1); then
+  fail "deployment requires metadata mode to match its preview"
+fi
+pass "deployment requires metadata mode to match its preview"
 
 printf '\nAll %d test groups passed.\n' "$passes"
 printf 'Fixture processed image files: %s\n' "$(find "$SITE/public/originals" -type f | wc -l | tr -d ' ')"
