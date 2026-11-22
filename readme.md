@@ -133,6 +133,30 @@ The dry run cannot upload, delete or invalidate anything. It also never runs
 Hugo, so it cannot overwrite an optimised image. If ImageOptim or another
 process changes `public/` during or after the preview, deployment stops.
 
+Before applying a reviewed deployment, the script repeats the AWS dry run and
+compares its transfer-plan fingerprint with the reviewed preview. If the remote
+plan changed, deployment stops and requires a new preview. A small race remains
+between that immediate check and the subsequent S3 operations because S3 sync
+is not transactional; avoid concurrent bucket writers during deployment.
+
+### Build-state fingerprints
+
+Text, configuration and template inputs use SHA-256 content hashes. Reading all
+21GB of source photographs on every check would make the workflow needlessly
+slow, so source images use their relative path, byte size, modification time,
+filesystem change time and inode. The change time and inode close the realistic
+same-size/restored-mtime gap without reading image contents. An exotic tool that
+can replace image bytes while preserving all of that filesystem metadata could
+still evade the check; run `--build-only` again whenever source provenance is
+uncertain or the files were restored by unusual backup tooling.
+
+The generated `public/` directory is treated more strictly: every file is
+SHA-256 hashed. The clean Hugo manifest is retained under `.deploy/` and
+compared with the post-ImageOptim output. Files whose bytes changed are staged
+with hard links and uploaded explicitly with `aws s3 cp` before the normal sync.
+This avoids the AWS CLI's size-and-mtime comparison missing an ImageOptim change
+without re-uploading unaffected files.
+
 ### Cache policy
 
 The deploy script uses three non-overlapping S3 sync passes, each retaining
