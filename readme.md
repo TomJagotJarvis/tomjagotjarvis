@@ -98,8 +98,8 @@ First create a clean production build:
 ./deploy.sh --build-only
 ```
 
-This records a fingerprint of all Hugo inputs. It does not contact AWS. Next,
-open the generated output in ImageOptim:
+This records the build time and Git commit. It does not contact AWS. Next, open
+the generated output in ImageOptim:
 
 ```bash
 open -a ImageOptim public/
@@ -110,52 +110,33 @@ direct command-line executable is not used because ImageOptim 1.9.3 aborted in
 a controlled macOS test; `open -a` is asynchronous, so completion must be
 confirmed in the app.
 
-Preview the exact optimised directory without rebuilding it:
+Preview the optimised directory without rebuilding it:
 
 ```bash
-./deploy.sh --skip-build --dry-run
+./deploy.sh --dry-run
 ```
 
 Review every upload, deletion and invalidation, then deploy that same output:
 
 ```bash
-./deploy.sh --skip-build
+./deploy.sh
 ```
 
-The final command refuses to run unless:
+Both preview and deployment use the already-built `public/`; neither invokes
+Hugo. The script rejects a changed Git commit, source files newer than the build,
+and backup, temporary or `.DS_Store` files. This timestamp check is intentionally
+simple. Rebuild after restoring sources with preserved timestamps or whenever
+there is any doubt about whether `public/` is current.
 
-- the source fingerprint still matches the recorded build;
-- `public/` exactly matches the preceding dry-run preview;
-- the preview used the same bucket, distribution and metadata mode; and
-- no backup, temporary or `.DS_Store` files are present.
+Immediately before each sync, the script touches all generated photographs in
+`public/originals/`. This makes them newer than their S3 objects, ensuring the
+ImageOptim bytes are uploaded despite the AWS CLI's size-and-mtime comparison.
+The deliberate trade-off is that every generated photograph is uploaded on an
+occasional deployment. For this personal site, that predictable behaviour is
+preferred to SHA manifests, hard-linked staging and additional deployment state.
 
-The dry run cannot upload, delete or invalidate anything. It also never runs
-Hugo, so it cannot overwrite an optimised image. If ImageOptim or another
-process changes `public/` during or after the preview, deployment stops.
-
-Before applying a reviewed deployment, the script repeats the AWS dry run and
-compares its transfer-plan fingerprint with the reviewed preview. If the remote
-plan changed, deployment stops and requires a new preview. A small race remains
-between that immediate check and the subsequent S3 operations because S3 sync
-is not transactional; avoid concurrent bucket writers during deployment.
-
-### Build-state fingerprints
-
-Text, configuration and template inputs use SHA-256 content hashes. Reading all
-21GB of source photographs on every check would make the workflow needlessly
-slow, so source images use their relative path, byte size, modification time,
-filesystem change time and inode. The change time and inode close the realistic
-same-size/restored-mtime gap without reading image contents. An exotic tool that
-can replace image bytes while preserving all of that filesystem metadata could
-still evade the check; run `--build-only` again whenever source provenance is
-uncertain or the files were restored by unusual backup tooling.
-
-The generated `public/` directory is treated more strictly: every file is
-SHA-256 hashed. The clean Hugo manifest is retained under `.deploy/` and
-compared with the post-ImageOptim output. Files whose bytes changed are staged
-with hard links and uploaded explicitly with `aws s3 cp` before the normal sync.
-This avoids the AWS CLI's size-and-mtime comparison missing an ImageOptim change
-without re-uploading unaffected files.
+The dry run cannot upload, delete or invalidate anything. It does update local
+generated-image modification times, but never changes their bytes.
 
 ### Cache policy
 
@@ -166,38 +147,27 @@ The deploy script uses three non-overlapping S3 sync passes, each retaining
 - HTML, XML and `robots.txt`: `public,max-age=0,s-maxage=300,must-revalidate`;
 - any remaining static files: `public,max-age=86400`.
 
-New and changed objects receive these headers automatically. Normal
-`aws s3 sync` does not update metadata on unchanged objects, so the existing
-bucket needs a one-time refresh. Preview it only after completing the normal
-build and ImageOptim steps:
+The first deployment re-uploads the freshly built documents and deliberately
+touched images, so these objects receive the new metadata without a separate
+migration mode. Review that first dry run carefully; it will be substantially
+larger than later content-only previews.
 
-```bash
-./deploy.sh --skip-build --dry-run --refresh-metadata
-```
-
-After explicit approval, apply the migration with the matching command:
-
-```bash
-./deploy.sh --skip-build --refresh-metadata
-```
-
-This re-uploads the prepared files with their cache class, removes stale files
-using the normal filtered syncs, and uses a one-time `/*` invalidation so cached
-responses receive the new headers. Do not run the migration casually: it
-uploads the entire site and consumes a full invalidation.
-
-For normal deployments, changed and deleted page objects generate targeted
-invalidations for both the origin path (`/posts/example/index.html`) and clean
-viewer paths (`/posts/example/` and `/posts/example`). Fingerprinted assets do
-not need invalidation.
+After a successful deployment, the script invalidates `/*`. One wildcard is
+easy to reason about and covers clean viewer URLs, rewritten origin paths,
+changed pages and deletions. For an occasional personal-site deployment, this
+is preferable to maintaining output-parsing and targeted-invalidation logic.
 
 ### Recovery and checks
 
-If source files change, start again with `--build-only`. If only `public/`
-changes after a preview, repeat the dry run. Deployment state is stored under
-the ignored `.deploy/` directory. Delete that directory to force a completely
-fresh preparation cycle; source photographs and Hugo's `resources/` image cache
-are never modified by these scripts.
+If source files change, start again with `--build-only`. The ignored
+`.deploy/build-ready` marker is the only local state. Delete `.deploy/` to force
+a fresh build. Source photographs and Hugo's `resources/` cache are never
+modified by these scripts.
+
+The bucket is assumed to have a single writer. It can change between the
+reviewed dry run and deployment, so run them close together and repeat the dry
+run if anything else may have written to S3. Likewise, rerun the preview if
+`public/` changes after it—especially if ImageOptim was still running.
 
 The read-only AWS review and proposed CloudFront, redirect, security-header and
 bucket-versioning changes are documented in

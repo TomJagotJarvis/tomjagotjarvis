@@ -327,10 +327,6 @@ if [ "${1:-}" = s3 ]; then
     *) exit 98 ;;
   esac
 
-  if [ "${2:-}" = cp ] && [[ "${3:-}" == *force-upload.* ]] && [ "$cache_class" != immutable ]; then
-    exit 0
-  fi
-
   case "$cache_class" in
     immutable)
       echo "${prefix}upload: public/originals/example/photo optimized_hu_abcdef.jpg to s3://test-bucket/originals/example/photo optimized_hu_abcdef.jpg"
@@ -360,10 +356,6 @@ if [ "${1:-}" = s3 ]; then
       ;;
   esac
 
-  if [ "${AWS_PLAN_VARIANT:-}" = changed ] && [ "$dry_run" -eq 1 ] && [ "$cache_class" = mutable ]; then
-    echo "${prefix}delete: s3://test-bucket/concurrent/index.html"
-    printf '%s\n' "$mode delete concurrent/index.html" >> "$AWS_OUTPUT_LOG"
-  fi
   exit 0
 fi
 if [ "${1:-}" = cloudfront ] && [ "${2:-}" = create-invalidation ]; then
@@ -380,42 +372,28 @@ export AWS_OUTPUT_LOG="$TMP_ROOT/aws-output.log"
 : > "$AWS_OUTPUT_LOG"
 
 (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --build-only > "$TMP_ROOT/deploy-build.log")
-assert_contains '^STATE_VERSION=2$' "$DEPLOY_SITE/.deploy/build-state" "build-only records deployment state"
-assert_contains $'^[0-9a-f]{64}\t' "$DEPLOY_SITE/.deploy/build-public-manifest.tsv" "build-only records per-file output hashes"
+assert_contains '^commit=' "$DEPLOY_SITE/.deploy/build-ready" "build-only records a simple readiness marker"
 assert_contains 'panicOnWarning' "$HUGO_LOG" "deployment build treats Hugo warnings as errors"
 assert_not_contains '^s3 |^cloudfront ' "$AWS_LOG" "build-only never contacts AWS"
 
-cp -p "$DEPLOY_SITE/assets/originals/source.jpg" "$TMP_ROOT/source-before.jpg"
-sleep 1
-printf '%s\n' 'SOURCE bytes' > "$DEPLOY_SITE/assets/originals/source.jpg"
-touch -r "$TMP_ROOT/source-before.jpg" "$DEPLOY_SITE/assets/originals/source.jpg"
-[ "$(wc -c < "$TMP_ROOT/source-before.jpg")" = "$(wc -c < "$DEPLOY_SITE/assets/originals/source.jpg")" ] \
-  || fail "same-size source-image fixture"
-if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run >/dev/null 2>&1); then
-  fail "source fingerprint detects same-size image changes with restored mtime"
-fi
-pass "source fingerprint detects same-size image changes with restored mtime"
-cp -p "$TMP_ROOT/source-before.jpg" "$DEPLOY_SITE/assets/originals/source.jpg"
-(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --build-only > "$TMP_ROOT/deploy-rebuild.log")
-: > "$AWS_LOG"
-: > "$AWS_OUTPUT_LOG"
-
 printf '%s\n' 'imageoptim output' >> "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg"
 optimised_hash=$(shasum -a 256 "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg" | awk '{print $1}')
-(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run > "$TMP_ROOT/deploy-dry-run.log")
+image_mtime_before=$(stat -f '%m' "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg")
+sleep 1
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --dry-run > "$TMP_ROOT/deploy-dry-run.log")
 after_dry_run_hash=$(shasum -a 256 "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg" | awk '{print $1}')
 [ "$optimised_hash" = "$after_dry_run_hash" ] || fail "dry-run preserves optimised output bytes"
 pass "dry-run preserves optimised output bytes"
-assert_contains '/posts/example/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run parses uploaded paths"
-assert_contains '/posts/example/$' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates the clean trailing-slash viewer path"
-assert_contains '/posts/example$' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates the clean no-slash viewer path"
-assert_contains '/old%20page/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run parses deleted paths"
-assert_contains '/robots\.txt' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates changed robots.txt"
+image_mtime_after=$(stat -f '%m' "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg")
+[ "$image_mtime_after" -gt "$image_mtime_before" ] || fail "generated images are marked newer for reliable upload"
+pass "generated images are marked newer for reliable upload"
+assert_contains '\(dryrun\) upload: .*posts/example page/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run reports uploads containing spaces"
+assert_contains '\(dryrun\) delete: .*old page/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run reports deletions containing spaces"
+assert_contains 'CloudFront invalidation .*: /\*' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run previews a simple full invalidation"
 assert_contains 'public,max-age=31536000,immutable' "$AWS_LOG" "fingerprinted assets receive immutable caching"
 assert_contains 'public,max-age=0,s-maxage=300,must-revalidate' "$AWS_LOG" "documents receive short revalidated caching"
 assert_contains 'public,max-age=86400' "$AWS_LOG" "other static files receive bounded caching"
 assert_contains 's3 sync .* --delete ' "$AWS_LOG" "all cache classes retain deletion handling"
-assert_contains '^s3 cp .*force-upload\..*public,max-age=31536000,immutable' "$AWS_LOG" "ImageOptim-changed bytes are force-uploaded independently of sync comparison"
 assert_not_contains '^cloudfront ' "$AWS_LOG" "dry-run never creates a CloudFront invalidation"
 
 grep '^s3 sync .*public,max-age=31536000,immutable' "$AWS_LOG" > "$TMP_ROOT/immutable-sync.log"
@@ -427,64 +405,29 @@ assert_contains ' --exclude \* --include \*\.html --include \*\.xml --include ro
 assert_not_contains 'include css/|include originals/' "$TMP_ROOT/mutable-sync.log" "document sync cannot delete immutable objects"
 assert_contains ' --exclude \*\.html --exclude \*\.xml --exclude robots\.txt .*--exclude css/\*\.css .*--exclude originals/\*_hu_\*\.jpg' "$TMP_ROOT/other-sync.log" "fallback sync cannot delete document or immutable objects"
 
-assert_contains '/posts/example%20page/index\.html' "$TMP_ROOT/deploy-dry-run.log" "dry-run parser preserves uploaded keys containing spaces"
-assert_contains '/old%20page/index\.html' "$TMP_ROOT/deploy-dry-run.log" "dry-run parser preserves deleted keys containing spaces"
 assert_contains '^dry upload .*photo optimized_hu_abcdef\.jpg$' "$AWS_OUTPUT_LOG" "mock emits dry-run uploads with spaced filenames"
 assert_contains '^dry delete .*old photo_hu_abcdef\.jpg$' "$AWS_OUTPUT_LOG" "mock emits dry-run deletes with spaced filenames"
 
-cp "$DEPLOY_SITE/public/index.html" "$TMP_ROOT/previewed-index.html"
-printf '%s\n' 'changed after preview' >> "$DEPLOY_SITE/public/index.html"
-if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build >/dev/null 2>&1); then
-  fail "deployment rejects output changed after preview"
-fi
-pass "deployment rejects output changed after preview"
-cp "$TMP_ROOT/previewed-index.html" "$DEPLOY_SITE/public/index.html"
-
 : > "$AWS_LOG"
 : > "$AWS_OUTPUT_LOG"
-if (cd "$DEPLOY_SITE" && AWS_PLAN_VARIANT=changed HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build >/dev/null 2>&1); then
-  fail "deployment rejects a remote plan changed after preview"
-fi
-pass "deployment rejects a remote plan changed after preview"
-assert_not_contains '^real ' "$AWS_OUTPUT_LOG" "changed remote plan is rejected before real transfers"
-
-: > "$AWS_LOG"
-: > "$AWS_OUTPUT_LOG"
-(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build > "$TMP_ROOT/deploy-apply.log")
-assert_contains '^cloudfront create-invalidation ' "$AWS_LOG" "reviewed deployment creates targeted invalidations"
-assert_contains '"Items":\[[^]]*"/old%20page/index\.html"[^]]*"/posts/example%20page/index\.html"' "$AWS_LOG" "invalidation request batches distinct paths"
-assert_contains '^dry upload ' "$AWS_OUTPUT_LOG" "real deployment repeats the dry-run plan immediately before applying"
-assert_contains '^real upload .*photo optimized_hu_abcdef\.jpg$' "$AWS_OUTPUT_LOG" "real AWS output parser handles uploads with spaces"
-assert_contains '^real delete .*old photo_hu_abcdef\.jpg$' "$AWS_OUTPUT_LOG" "real AWS output parser handles deletes with spaces"
-
-printf '%s\n' 'source changed' >> "$DEPLOY_SITE/content/index.md"
-if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run >/dev/null 2>&1); then
-  fail "deployment rejects stale output after a source change"
-fi
-pass "deployment rejects stale output after a source change"
-printf '%s\n' 'fixture content' > "$DEPLOY_SITE/content/index.md"
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh > "$TMP_ROOT/deploy-apply.log")
+assert_contains '^cloudfront create-invalidation .*--paths /\*$' "$AWS_LOG" "reviewed deployment creates one full invalidation"
+assert_contains '^real upload .*photo optimized_hu_abcdef\.jpg$' "$AWS_OUTPUT_LOG" "real sync reports uploads with spaces"
+assert_contains '^real delete .*old photo_hu_abcdef\.jpg$' "$AWS_OUTPUT_LOG" "real sync reports deletes with spaces"
+assert_not_contains '^dry ' "$AWS_OUTPUT_LOG" "real deployment does not hide an additional dry-run"
 
 touch "$DEPLOY_SITE/public/leak.bak"
-if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run >/dev/null 2>&1); then
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --dry-run >/dev/null 2>&1); then
   fail "deployment rejects backup files in public output"
 fi
 pass "deployment rejects backup files in public output"
 rm "$DEPLOY_SITE/public/leak.bak"
 
-: > "$AWS_LOG"
-if ! (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build --dry-run --refresh-metadata > "$TMP_ROOT/deploy-refresh.log" 2> "$TMP_ROOT/deploy-refresh.err"); then
-  cat "$TMP_ROOT/deploy-refresh.log" "$TMP_ROOT/deploy-refresh.err" >&2
-  fail "metadata refresh dry-run succeeds"
+printf '%s\n' 'source changed' >> "$DEPLOY_SITE/content/index.md"
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --dry-run >/dev/null 2>&1); then
+  fail "deployment rejects stale output after a source change"
 fi
-pass "metadata refresh dry-run succeeds"
-assert_contains '^s3 cp ' "$AWS_LOG" "metadata refresh re-uploads unchanged objects"
-assert_contains '^/\*$' "$TMP_ROOT/deploy-refresh.log" "metadata refresh previews a one-time full invalidation"
-assert_not_contains '^cloudfront ' "$AWS_LOG" "metadata refresh dry-run cannot invalidate CloudFront"
-
-if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" AWS_BIN="$DEPLOY_SITE/bin/aws" ./deploy.sh --skip-build >/dev/null 2>&1); then
-  fail "deployment requires metadata mode to match its preview"
-fi
-pass "deployment requires metadata mode to match its preview"
+pass "deployment rejects stale output after a source change"
 
 printf '\nAll %d test groups passed.\n' "$passes"
 printf 'Fixture processed image files: %s\n' "$(find "$SITE/public/originals" -type f | wc -l | tr -d ' ')"
