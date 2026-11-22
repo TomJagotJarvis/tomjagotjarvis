@@ -4,16 +4,9 @@ set -euo pipefail
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 cd "$ROOT"
 
-export AWS_PAGER=""
-
 HUGO_BIN=${HUGO_BIN:-hugo}
-AWS_BIN=${AWS_BIN:-aws}
 STATE_DIR="$ROOT/.deploy"
 BUILD_MARKER="$STATE_DIR/build-ready"
-
-IMMUTABLE_CACHE='public,max-age=31536000,immutable'
-MUTABLE_CACHE='public,max-age=0,s-maxage=300,must-revalidate'
-OTHER_CACHE='public,max-age=86400'
 
 DRY_RUN=0
 BUILD_ONLY=0
@@ -88,84 +81,11 @@ validate_prepared_build() {
   [ -z "$changed_source" ] || die "site source changed after the build: $changed_source"
 }
 
-touch_generated_images() {
-  [ -d public/originals ] || return 0
-  count=$(find public/originals -type f \( \
-    -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o \
-    -iname '*.webp' -o -iname '*.avif' \
-  \) | wc -l | tr -d ' ')
-  if [ "$count" -gt 0 ]; then
-    find public/originals -type f \( \
-      -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o \
-      -iname '*.webp' -o -iname '*.avif' \
-    \) -exec touch {} +
-  fi
-  printf 'Marked %s generated image(s) for upload.\n' "$count"
-}
-
-run_transfer() {
-  printf '+ aws'
-  for arg in "$@"; do printf ' %q' "$arg"; done
-  printf '\n'
-  "$AWS_BIN" "$@"
-}
-
-run_transfer_with_mode() {
-  if [ "$DRY_RUN" -eq 1 ]; then
-    run_transfer "$@" --dryrun
-  else
-    run_transfer "$@"
-  fi
-}
-
-run_cache_class_syncs() {
-  destination="s3://$BUCKET"
-
-  immutable_filters=(
-    --exclude '*'
-    --include 'css/*.css'
-    --include 'originals/*_hu_*.jpg'
-    --include 'originals/*_hu_*.jpeg'
-    --include 'originals/*_hu_*.png'
-    --include 'originals/*_hu_*.webp'
-    --include 'originals/*_hu_*.avif'
-  )
-  mutable_filters=(
-    --exclude '*'
-    --include '*.html'
-    --include '*.xml'
-    --include 'robots.txt'
-  )
-  other_filters=(
-    --exclude '*.html'
-    --exclude '*.xml'
-    --exclude 'robots.txt'
-    --exclude 'css/*.css'
-    --exclude 'originals/*_hu_*.jpg'
-    --exclude 'originals/*_hu_*.jpeg'
-    --exclude 'originals/*_hu_*.png'
-    --exclude 'originals/*_hu_*.webp'
-    --exclude 'originals/*_hu_*.avif'
-  )
-
-  sync_flags=(--delete --no-progress)
-  run_transfer_with_mode s3 sync public/ "$destination" "${sync_flags[@]}" \
-    --cache-control "$IMMUTABLE_CACHE" "${immutable_filters[@]}"
-  run_transfer_with_mode s3 sync public/ "$destination" "${sync_flags[@]}" \
-    --cache-control "$MUTABLE_CACHE" "${mutable_filters[@]}"
-  run_transfer_with_mode s3 sync public/ "$destination" "${sync_flags[@]}" \
-    --cache-control "$OTHER_CACHE" "${other_filters[@]}"
-}
-
-invalidate_cloudfront() {
-  printf 'CloudFront invalidation (%s): /*\n' "$DIST_ID"
-  if [ "$DRY_RUN" -eq 1 ]; then
-    printf 'DRY RUN: no CloudFront invalidation was created.\n'
-    return
-  fi
-  "$AWS_BIN" cloudfront create-invalidation \
-    --distribution-id "$DIST_ID" \
-    --paths '/*' >/dev/null
+run_hugo_deploy() {
+  # The one-time metadata migration is deliberately a direct Hugo command.
+  # Normal wrapper use must remain incremental even if this variable is set in
+  # the caller's shell.
+  HUGO_DEPLOYMENT_FORCE=false "$HUGO_BIN" deploy --target production "$@"
 }
 
 while [ "$#" -gt 0 ]; do
@@ -193,34 +113,12 @@ fi
 
 validate_prepared_build
 
-if [ -f .env ]; then
-  set -a
-  # shellcheck disable=SC1091
-  . ./.env
-  set +a
-else
-  die '.env file not found.'
-fi
-: "${BUCKET:?BUCKET not set in .env}"
-: "${DIST_ID:?DIST_ID not set in .env}"
-
-# Hugo may restore generated files with old cache timestamps. Touching only the
-# generated images makes the following sync upload the ImageOptim result without
-# hashes, manifests or a separate staging directory. The trade-off is that all
-# generated images are uploaded on each occasional deployment.
-touch_generated_images
-
 if [ "$DRY_RUN" -eq 1 ]; then
-  printf 'DRY RUN: previewing S3 sync and CloudFront invalidations.\n'
-else
-  printf 'Deploying the prepared public/ output.\n'
-fi
-
-run_cache_class_syncs
-invalidate_cloudfront
-
-if [ "$DRY_RUN" -eq 1 ]; then
+  printf 'DRY RUN: comparing the prepared output with the production target.\n'
+  run_hugo_deploy --dryRun
   printf 'DRY RUN complete. No S3 objects or CloudFront resources were changed.\n'
 else
-  printf 'Deploy complete. Cache metadata applied and invalidations sent.\n'
+  printf 'Deploying the prepared public/ output with Hugo.\n'
+  run_hugo_deploy
+  printf 'Deploy complete.\n'
 fi

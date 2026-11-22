@@ -36,10 +36,11 @@ These are proposals for explicit owner approval. They are not performed by
      --bucket "$BUCKET" \
      --versioning-configuration Status=Enabled
    ```
-2. **Review the first cache-aware deployment carefully.** A fresh Hugo build
-   rewrites documents, and the deploy script deliberately marks all generated
-   images for upload. The first normal deployment therefore applies the new
-   metadata without a separate migration command.
+2. **Run the cache metadata migration separately.** Native `hugo deploy`
+   deliberately skips unchanged content even when its metadata differs. After
+   versioning is enabled, use the reviewed one-time `--force` procedure in the
+   README to apply the cache metadata to every existing object. Normal
+   deployments must not use `--force`.
 3. **Add a `www` → apex redirect.** Extend or replace the viewer-request
    CloudFront Function so requests whose `Host` is `www.tomjagotjarvis.com`
    return a permanent redirect to the same path and query on
@@ -74,34 +75,30 @@ the appropriate broad TTL range for origin `Cache-Control` directives to select
 short caching for documents and one-year caching for fingerprinted assets.
 Keep the policy unless a later inspection identifies a behavior-specific need.
 A response-headers policy is separate: it can add security headers but should
-not be used to override the S3 cache directives established by `deploy.sh`.
+not override the S3 cache directives established in `config.toml`.
 
 ## Clean URLs and invalidations
 
-The viewer-request rewrite means targeted invalidation must account for both
-viewer and rewritten origin paths. Rather than parse AWS output and maintain
-that mapping, the simplified deployment invalidates `/*` after a successful
-sync. A wildcard counts as one invalidation path and is proportionate for this
-occasionally deployed personal site.
+The deployment target keeps `index.html` object keys, so the viewer-request
+rewrite continues to provide clean URLs. Native Hugo deployment invalidates
+`/*` after a successful changed deployment. This covers both viewer and
+rewritten origin paths without custom output parsing. A wildcard counts as one
+invalidation path and is proportionate for this occasionally deployed site.
 
 ## Rollback and operational limits
 
-Filtered sync passes retain `--delete`, which is required to remove obsolete
-hashed images and deleted pages. S3 sync is not transactional: a failure can
-leave a partially updated bucket, but the script stops before invalidation.
-Bucket versioning is the recommended recovery mechanism for this personal site;
-versioned-prefix deployments would add disproportionate complexity.
-
-AWS CLI local-to-S3 sync decides whether to upload from object existence, size
-and modification time; `--exact-timestamps` only changes S3-to-local download
-comparison. The script therefore touches every generated image immediately
-before sync. This reliably uploads the ImageOptim result at the understandable
-cost of re-uploading all generated photographs on each occasional deployment.
+Native `hugo deploy` compares object size and MD5 checksum, uploads new or
+changed files, and deletes remote objects absent from the clean local build. It
+is not transactional: a failure can leave a partially updated bucket, but Hugo
+does not invalidate CloudFront after a failed transfer. Its default deletion
+limit skips all deletions if more than 256 are proposed. Bucket versioning is
+the recommended recovery mechanism; versioned-prefix deployments would add
+disproportionate complexity.
 
 No remote lock or stored transfer plan is maintained. The dry run is a preview,
 not a transaction: another writer could alter the bucket before deployment.
-Keep S3 single-writer, run preview and deployment close together, and use bucket
-versioning for recovery.
+The confirmed deployment recalculates its plan, but S3 should remain
+single-writer and preview and deployment should be run close together.
 
 The deployment IAM user can read the distribution but was denied
 `cloudfront:GetCachePolicy`, `cloudfront:DescribeFunction` and
