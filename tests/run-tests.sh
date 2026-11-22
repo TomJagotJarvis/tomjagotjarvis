@@ -53,6 +53,8 @@ cp -R "$ROOT/archetypes" "$SITE/"
 cp -R "$ROOT/assets/css" "$SITE/assets/"
 cp -R "$ROOT/tests/fixtures/assets/originals" "$SITE/assets/"
 cp -R "$ROOT/tests/fixtures/content" "$SITE/"
+printf '%s\n' 'must not be published' > "$SITE/content/posts/image-first/index.md.bak"
+printf '%s\n' 'must not be published' > "$SITE/content/posts/image-first/.DS_Store"
 
 BUILD_LOG="$TMP_ROOT/hugo-build.log"
 if ! hugo --source "$SITE" \
@@ -82,6 +84,11 @@ for generated in \
   [ -f "$SITE/public/$generated" ] || fail "generated page exists: $generated"
 done
 pass "homepage, posts, taxonomy, archive, robots, and sitemap are generated"
+
+if find "$SITE/public" -type f \( -name '*.bak' -o -name '.DS_Store' \) | grep . >/dev/null; then
+  fail "backup and Finder files are excluded from Hugo output"
+fi
+pass "backup and Finder files are excluded from Hugo output"
 
 POST_HTML="$SITE/public/posts/image-first/index.html"
 SECTION_HTML="$SITE/public/posts/section-first/index.html"
@@ -273,17 +280,165 @@ fi
 pass "add-images errors return a non-zero status"
 
 DEPLOY_SITE="$TMP_ROOT/deploy-site"
-mkdir -p "$DEPLOY_SITE/bin" "$DEPLOY_SITE/public"
+mkdir -p "$DEPLOY_SITE/bin" "$DEPLOY_SITE/assets/css" "$DEPLOY_SITE/assets/originals" "$DEPLOY_SITE/content" "$DEPLOY_SITE/layouts"
 cp "$ROOT/deploy.sh" "$DEPLOY_SITE/deploy.sh"
 chmod +x "$DEPLOY_SITE/deploy.sh"
-printf '%s\n' 'BUCKET=test-bucket' 'DIST_ID=test-distribution' > "$DEPLOY_SITE/.env"
-printf '%s\n' '#!/bin/bash' 'exit 0' > "$DEPLOY_SITE/bin/hugo"
-printf '%s\n' '#!/bin/bash' 'if [ "${1:-}" = "s3" ]; then' '  echo "(dryrun) upload: public/posts/example/index.html to s3://test-bucket/posts/example/index.html"' '  echo "(dryrun) delete: s3://test-bucket/old/index.html"' '  exit 0' 'fi' 'exit 99' > "$DEPLOY_SITE/bin/aws"
-chmod +x "$DEPLOY_SITE/bin/hugo" "$DEPLOY_SITE/bin/aws"
-(cd "$DEPLOY_SITE" && PATH="$DEPLOY_SITE/bin:$PATH" ./deploy.sh --dry-run > "$TMP_ROOT/deploy-dry-run.log")
-assert_contains '/posts/example/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run parses uploaded paths"
-assert_contains '/old/index\.html' "$TMP_ROOT/deploy-dry-run.log" "deploy dry-run parses deleted paths"
-assert_contains '/robots\.txt' "$TMP_ROOT/deploy-dry-run.log" "deploy invalidates robots.txt"
+cp "$ROOT/config.toml" "$DEPLOY_SITE/config.toml"
+printf '%s\n' 'body {}' > "$DEPLOY_SITE/assets/css/styles.css"
+printf '%s\n' 'source bytes' > "$DEPLOY_SITE/assets/originals/source.jpg"
+printf '%s\n' 'fixture content' > "$DEPLOY_SITE/content/index.md"
+printf '%s\n' 'fixture layout' > "$DEPLOY_SITE/layouts/index.html"
+cat > "$DEPLOY_SITE/bin/hugo" <<'HUGO_MOCK'
+#!/bin/bash
+printf '%s\n' "$*" >> "$HUGO_LOG"
+if [ "${1:-}" = version ]; then
+  echo 'hugo v0.test+extended'
+  exit 0
+fi
+if [ "${1:-}" = deploy ]; then
+  printf '%s\n' "${HUGO_DEPLOYMENT_FORCE:-unset}" >> "$HUGO_DEPLOY_ENV_LOG"
+  exit 0
+fi
+rm -rf public
+mkdir -p public/posts/example public/css public/originals/example
+printf '%s\n' '<html>home</html>' > public/index.html
+printf '%s\n' '<html>post</html>' > public/posts/example/index.html
+printf '%s\n' 'User-agent: *' > public/robots.txt
+printf '%s\n' 'css' > public/css/styles.min.abcdef0123456789.css
+printf '%s\n' 'jpeg bytes' > public/originals/example/photo_hu_abcdef.jpg
+HUGO_MOCK
+chmod +x "$DEPLOY_SITE/bin/hugo"
+export HUGO_LOG="$TMP_ROOT/hugo-mock.log"
+export HUGO_DEPLOY_ENV_LOG="$TMP_ROOT/hugo-deploy-env.log"
+: > "$HUGO_LOG"
+: > "$HUGO_DEPLOY_ENV_LOG"
+
+(cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" ./deploy.sh --build-only > "$TMP_ROOT/deploy-build.log")
+assert_contains '^commit=' "$DEPLOY_SITE/.deploy/build-ready" "build-only records a simple readiness marker"
+assert_contains 'panicOnWarning' "$HUGO_LOG" "deployment build treats Hugo warnings as errors"
+
+printf '%s\n' 'imageoptim output' >> "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg"
+optimised_hash=$(shasum -a 256 "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg" | awk '{print $1}')
+image_mtime_before=$(stat -f '%m' "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg")
+(cd "$DEPLOY_SITE" && HUGO_DEPLOYMENT_FORCE=true HUGO_BIN="$DEPLOY_SITE/bin/hugo" ./deploy.sh --dry-run > "$TMP_ROOT/deploy-dry-run.log")
+after_dry_run_hash=$(shasum -a 256 "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg" | awk '{print $1}')
+[ "$optimised_hash" = "$after_dry_run_hash" ] || fail "dry-run preserves optimised output bytes"
+pass "dry-run preserves optimised output bytes"
+image_mtime_after=$(stat -f '%m' "$DEPLOY_SITE/public/originals/example/photo_hu_abcdef.jpg")
+[ "$image_mtime_after" = "$image_mtime_before" ] || fail "dry-run preserves optimised output timestamps"
+pass "dry-run preserves optimised output timestamps"
+assert_contains '^deploy --target production --dryRun$' "$HUGO_LOG" "preview uses native Hugo deployment without rebuilding"
+assert_not_contains 'deploy .*--force' "$HUGO_LOG" "normal preview never enables force"
+assert_contains '^false$' "$HUGO_DEPLOY_ENV_LOG" "normal preview overrides inherited force configuration"
+
+(cd "$DEPLOY_SITE" && HUGO_DEPLOYMENT_FORCE=true HUGO_BIN="$DEPLOY_SITE/bin/hugo" ./deploy.sh > "$TMP_ROOT/deploy-apply.log")
+assert_contains '^deploy --target production$' "$HUGO_LOG" "normal apply uses native Hugo deployment"
+assert_not_contains 'deploy .*--force' "$HUGO_LOG" "normal apply never enables force"
+[ "$(grep -c '^false$' "$HUGO_DEPLOY_ENV_LOG")" -eq 2 ] || fail "normal apply overrides inherited force configuration"
+pass "normal apply overrides inherited force configuration"
+
+hugo_calls_before=$(wc -l < "$HUGO_LOG" | tr -d ' ')
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" ./deploy.sh --force >/dev/null 2>&1); then
+  fail "deployment wrapper rejects force"
+fi
+[ "$(wc -l < "$HUGO_LOG" | tr -d ' ')" = "$hugo_calls_before" ] || fail "rejected force never reaches Hugo"
+pass "deployment wrapper rejects force before invoking Hugo"
+
+touch "$DEPLOY_SITE/public/leak.bak"
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" ./deploy.sh --dry-run >/dev/null 2>&1); then
+  fail "deployment rejects backup files in public output"
+fi
+pass "deployment rejects backup files in public output"
+rm "$DEPLOY_SITE/public/leak.bak"
+
+printf '%s\n' 'source changed' >> "$DEPLOY_SITE/content/index.md"
+if (cd "$DEPLOY_SITE" && HUGO_BIN="$DEPLOY_SITE/bin/hugo" ./deploy.sh --dry-run >/dev/null 2>&1); then
+  fail "deployment rejects stale output after a source change"
+fi
+pass "deployment rejects stale output after a source change"
+
+assert_contains "url = 's3://tomjagotjarvis\.com\?region=eu-west-2'" "$ROOT/config.toml" "production S3 target is configured"
+assert_contains "cloudFrontDistributionID = 'E7IJW8RB01BH2'" "$ROOT/config.toml" "production CloudFront invalidation is configured"
+assert_contains 'stripIndexHTML = false' "$ROOT/config.toml" "deployment preserves index.html origin keys for clean-URL rewriting"
+[ "$(grep -c "cacheControl = 'public,max-age=31536000,immutable'" "$ROOT/config.toml")" -eq 1 ] || fail "CSS and generated images share immutable caching"
+pass "CSS and generated images use immutable caching"
+assert_contains "cacheControl = 'public,max-age=0,s-maxage=300,must-revalidate'" "$ROOT/config.toml" "documents use short revalidated caching"
+assert_contains "cacheControl = 'public,max-age=86400'" "$ROOT/config.toml" "other files use bounded caching"
+assert_not_contains 'force[[:space:]]*=' "$ROOT/config.toml" "normal deployment configuration never forces uploads"
+
+NATIVE_SITE="$TMP_ROOT/native-deploy-site"
+NATIVE_REMOTE="$TMP_ROOT/native-deploy-remote"
+mkdir -p "$NATIVE_SITE/public/originals/example" "$NATIVE_SITE/public/css" "$NATIVE_SITE/public/downloads" "$NATIVE_REMOTE"
+cat > "$NATIVE_SITE/config.toml" <<NATIVE_CONFIG
+baseURL = 'https://example.test/'
+publishDir = 'public'
+
+[deployment]
+  confirm = false
+  invalidateCDN = false
+  maxDeletes = 10
+
+  [[deployment.matchers]]
+    pattern = '^(css/.+\\.[0-9a-f]{16,}\\.css|originals/.+_hu_[0-9a-f]+\\.(?i:jpg|jpeg|png|webp|avif))$'
+    cacheControl = 'public,max-age=31536000,immutable'
+
+  [[deployment.matchers]]
+    pattern = '\\.(html|xml)$|^robots\\.txt$'
+    cacheControl = 'public,max-age=0,s-maxage=300,must-revalidate'
+
+  [[deployment.matchers]]
+    pattern = '.*'
+    cacheControl = 'public,max-age=86400'
+
+  [[deployment.targets]]
+    name = 'local'
+    url = 'file://$NATIVE_REMOTE'
+NATIVE_CONFIG
+printf 'image bytes version A\n' > "$NATIVE_SITE/public/originals/example/photo_hu_abcdef.jpg"
+printf 'body {}\n' > "$NATIVE_SITE/public/css/styles.min.abcdef0123456789.css"
+printf '<html>fixture</html>\n' > "$NATIVE_SITE/public/index.html"
+printf 'download\n' > "$NATIVE_SITE/public/downloads/read me.txt"
+
+hugo deploy --source "$NATIVE_SITE" --target local --dryRun > "$TMP_ROOT/native-first-preview.log"
+assert_contains 'photo_hu_abcdef\.jpg .*Cache-Control: "public,max-age=31536000,immutable"' "$TMP_ROOT/native-first-preview.log" "native deploy applies immutable image metadata"
+assert_contains 'index\.html .*Cache-Control: "public,max-age=0,s-maxage=300,must-revalidate"' "$TMP_ROOT/native-first-preview.log" "native deploy applies document metadata"
+assert_contains 'read me\.txt .*Cache-Control: "public,max-age=86400"' "$TMP_ROOT/native-first-preview.log" "native deploy handles filenames with spaces and fallback metadata"
+hugo deploy --source "$NATIVE_SITE" --target local >/dev/null
+
+native_image="$NATIVE_SITE/public/originals/example/photo_hu_abcdef.jpg"
+remote_image="$NATIVE_REMOTE/originals/example/photo_hu_abcdef.jpg"
+native_hash=$(shasum -a 256 "$native_image" | awk '{print $1}')
+native_mtime=$(stat -f '%m' "$native_image")
+hugo deploy --source "$NATIVE_SITE" --target local --dryRun > "$TMP_ROOT/native-unchanged.log"
+assert_contains '^No changes required\.$' "$TMP_ROOT/native-unchanged.log" "native deploy skips unchanged generated images"
+[ "$(shasum -a 256 "$native_image" | awk '{print $1}')" = "$native_hash" ] || fail "native deploy preserves ImageOptim bytes"
+[ "$(stat -f '%m' "$native_image")" = "$native_mtime" ] || fail "native deploy preserves ImageOptim timestamps"
+pass "native deploy does not rebuild or alter ImageOptim output"
+
+cp -p "$native_image" "$TMP_ROOT/native-image-before-change.jpg"
+printf 'image bytes version B\n' > "$native_image"
+touch -r "$TMP_ROOT/native-image-before-change.jpg" "$native_image"
+[ "$(stat -f '%z' "$native_image")" = "$(stat -f '%z' "$TMP_ROOT/native-image-before-change.jpg")" ] || fail "changed image fixture retains its size"
+[ "$(stat -f '%m' "$native_image")" = "$(stat -f '%m' "$TMP_ROOT/native-image-before-change.jpg")" ] || fail "changed image fixture retains its timestamp"
+remote_hash_before_preview=$(shasum -a 256 "$remote_image" | awk '{print $1}')
+hugo deploy --source "$NATIVE_SITE" --target local --dryRun > "$TMP_ROOT/native-changed.log"
+assert_contains 'Would upload: originals/example/photo_hu_abcdef\.jpg .*: md5 differs' "$TMP_ROOT/native-changed.log" "native deploy detects same-size same-timestamp image changes"
+[ "$(shasum -a 256 "$remote_image" | awk '{print $1}')" = "$remote_hash_before_preview" ] || fail "native dry run leaves remote image unchanged"
+pass "native dry run does not upload changed images"
+hugo deploy --source "$NATIVE_SITE" --target local >/dev/null
+[ "$(shasum -a 256 "$remote_image" | awk '{print $1}')" = "$(shasum -a 256 "$native_image" | awk '{print $1}')" ] || fail "native deploy uploads changed image bytes"
+pass "native deploy uploads genuinely changed images"
+
+printf 'obsolete\n' > "$NATIVE_SITE/public/old page.html"
+hugo deploy --source "$NATIVE_SITE" --target local >/dev/null
+rm "$NATIVE_SITE/public/old page.html"
+hugo deploy --source "$NATIVE_SITE" --target local --dryRun > "$TMP_ROOT/native-delete.log"
+assert_contains 'Would delete old page\.html' "$TMP_ROOT/native-delete.log" "native dry run previews deletions with spaces"
+[ -f "$NATIVE_REMOTE/old page.html" ] || fail "native dry run preserves objects proposed for deletion"
+pass "native dry run does not delete objects"
+hugo deploy --source "$NATIVE_SITE" --target local >/dev/null
+[ ! -e "$NATIVE_REMOTE/old page.html" ] || fail "native deploy deletes orphaned objects"
+pass "native deploy deletes orphaned objects"
 
 printf '\nAll %d test groups passed.\n' "$passes"
 printf 'Fixture processed image files: %s\n' "$(find "$SITE/public/originals" -type f | wc -l | tr -d ' ')"

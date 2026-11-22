@@ -6,6 +6,7 @@ publishDir = "public"
 uglyURLs = false
 relativeURLs = true
 canonifyURLs = false
+ignoreFiles = ['\.bak(\..*)?$', '(^|/)\.DS_Store$']
 
 pagination.pagerSize = 6
 
@@ -14,6 +15,27 @@ pagination.pagerSize = 6
 
 [minify]
   disableXML = true
+
+[deployment]
+  confirm = true
+
+  [[deployment.matchers]]
+    pattern = '^(css/.+\.[0-9a-f]{16,}\.css|originals/.+_hu_[0-9a-f]+\.(?i:jpg|jpeg|png|webp|avif))$'
+    cacheControl = 'public,max-age=31536000,immutable'
+
+  [[deployment.matchers]]
+    pattern = '\.(html|xml)$|^robots\.txt$'
+    cacheControl = 'public,max-age=0,s-maxage=300,must-revalidate'
+
+  [[deployment.matchers]]
+    pattern = '.*'
+    cacheControl = 'public,max-age=86400'
+
+  [[deployment.targets]]
+    name = 'production'
+    url = 's3://tomjagotjarvis.com?region=eu-west-2'
+    cloudFrontDistributionID = 'E7IJW8RB01BH2'
+    stripIndexHTML = false
 
 [params]
   description = "Travel photography by Tom Jagot-Jarvis."
