@@ -102,6 +102,8 @@ assert_contains '<link rel="canonical" href="https://tomjagotjarvis.com/posts/im
 assert_contains '<time datetime="2026-01-02">' "$POST_HTML" "time has a machine-readable datetime"
 assert_contains '<h1 class="visually-hidden">Tom Jagot-Jarvis</h1>' "$HOME_HTML" "homepage has a proper h1"
 assert_contains '<h2 class="title">Image First</h2>' "$HOME_HTML" "homepage cards use h2 headings"
+assert_contains '<a class="skip-link" href="#main-content">Skip to main content</a>' "$HOME_HTML" "skip link targets the main content"
+assert_contains '<main id="main-content" tabindex="-1">' "$HOME_HTML" "main content is a focusable skip-link target"
 assert_contains '<nav class="nav-links" aria-label="Primary navigation">' "$HOME_HTML" "primary navigation is labelled"
 assert_contains 'aria-current="page">Home</a>' "$HOME_HTML" "active primary navigation is identified"
 assert_contains '<h2 class="title">Image First</h2>' "$TAXONOMY_HTML" "taxonomy cards use h2 headings"
@@ -109,6 +111,7 @@ assert_contains '<h2 class="section-heading">' "$SECTION_HTML" "section-title re
 assert_contains 'a:focus-visible' "$ROOT/assets/css/styles.css" "keyboard focus styling is present"
 assert_contains 'background: rgba\(0, 0, 0, 0\.68\)' "$ROOT/assets/css/styles.css" "overlay contrast is strengthened"
 assert_contains 'color: #666' "$ROOT/assets/css/styles.css" "muted text contrast is corrected"
+assert_contains '@media \(prefers-reduced-motion: reduce\)' "$ROOT/assets/css/styles.css" "reduced-motion preference disables decorative movement"
 assert_not_contains 'Inter:wght@300' "$ROOT/layouts/_default/baseof.html" "unused Inter 300 font weight is removed"
 assert_not_contains 'Playfair Display' "$ROOT/assets/css/styles.css" "unloaded Playfair Display references are removed"
 
@@ -170,20 +173,28 @@ assert_contains '700w,.*1452w,.*2904w' "$POST_HTML" "6000px landscape produces 7
 assert_contains '700w,.*1452w,.*1686w' "$POST_HTML" "1686px portrait caps at its source width"
 assert_contains '700w,.*1452w,.*1500w' "$POST_HTML" "1500px landscape caps at its source width"
 assert_contains '700w,.*1000w' "$POST_HTML" "1000px portrait deduplicates larger requests"
-assert_contains 'sizes="\(min-width: 1232px\) 600px, \(min-width: 700px\) calc\(50vw - 1rem\), 100vw"' "$HOME_HTML" "homepage sizes matches the two-column 600px card layout"
+assert_contains '<picture class="image-portrait" style="--portrait-source-width: [0-9]+px; --portrait-vh-width: [0-9.]+vh">' "$POST_HTML" "portrait resources receive source-width and aspect-ratio-aware limits"
+assert_contains 'sizes="\(min-width: 700px\) 600px, 100vw"' "$HOME_HTML" "homepage sizes matches the actual 600px card width"
+assert_contains 'sizes="\(min-width: 700px\) 600px, 100vw" alt=""' "$HOME_HTML" "homepage card image is decorative beside its heading"
 
 # Verify the declared homepage slot policy at representative viewport/DPR pairs.
 # Candidate choice is the first available width at or above slot × DPR.
 slot_320=320
-slot_768=$((768 / 2 - 16))
+slot_390=390
+slot_600=600
+slot_768=600
 slot_1280=600
 slot_1920=600
 [ "$slot_320" -eq 320 ] || fail "320px viewport slot"
-[ "$slot_768" -eq 368 ] || fail "768px viewport slot"
+[ "$slot_390" -eq 390 ] || fail "390px viewport slot"
+[ "$slot_600" -eq 600 ] || fail "600px viewport slot"
+[ "$slot_768" -eq 600 ] || fail "768px viewport slot"
 [ "$slot_1280" -eq 600 ] || fail "1280px viewport slot"
 [ "$slot_1920" -eq 600 ] || fail "1920px viewport slot"
 [ $((slot_320 * 2)) -gt 480 ] && [ $((slot_320 * 2)) -le 960 ] || fail "320px DPR2 candidate range"
-[ $((slot_768 * 2)) -gt 480 ] && [ $((slot_768 * 2)) -le 960 ] || fail "768px DPR2 candidate range"
+[ $((slot_390 * 2)) -gt 480 ] && [ $((slot_390 * 2)) -le 960 ] || fail "390px DPR2 candidate range"
+[ $((slot_600 * 2)) -gt 960 ] && [ $((slot_600 * 2)) -le 1440 ] || fail "600px DPR2 candidate range"
+[ $((slot_768 * 2)) -gt 960 ] && [ $((slot_768 * 2)) -le 1440 ] || fail "768px DPR2 candidate range"
 [ $((slot_1280 * 2)) -gt 960 ] && [ $((slot_1280 * 2)) -le 1440 ] || fail "1280px DPR2 candidate range"
 [ "$slot_1920" -gt 480 ] && [ "$slot_1920" -le 960 ] || fail "1920px DPR1 candidate range"
 pass "homepage sizing policy covers mobile, tablet, desktop, and DPR2 scenarios"

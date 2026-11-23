@@ -53,7 +53,14 @@
   {{ range $out }}
     {{ $srcset = $srcset | append (printf "%s %dw" .RelPermalink .Width) }}
   {{ end }}
-  <picture>
+  {{ $isPortrait := gt $img.Height $img.Width }}
+  {{ $portraitWidthVh := 0.0 }}
+  {{ if $isPortrait }}
+    {{/* Cap portrait height without cropping by converting 90vh to the
+         corresponding width for this image's original aspect ratio. */}}
+    {{ $portraitWidthVh = div (mul (float $img.Width) 90) $img.Height }}
+  {{ end }}
+  <picture{{ if $isPortrait }} class="image-portrait" style="--portrait-source-width: {{ $img.Width }}px; --portrait-vh-width: {{ printf "%.4fvh" $portraitWidthVh }}"{{ end }}>
     <img src="{{ $small.RelPermalink }}"
       srcset="{{ delimit $srcset ", " }}"
       sizes="{{ $sizes }}" alt="{{ $alt }}"
