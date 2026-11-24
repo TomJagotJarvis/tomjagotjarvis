@@ -174,8 +174,23 @@ assert_contains '700w,.*1452w,.*1686w' "$POST_HTML" "1686px portrait caps at its
 assert_contains '700w,.*1452w,.*1500w' "$POST_HTML" "1500px landscape caps at its source width"
 assert_contains '700w,.*1000w' "$POST_HTML" "1000px portrait deduplicates larger requests"
 assert_contains '<picture class="image-portrait" style="--portrait-source-width: [0-9]+px; --portrait-vh-width: [0-9.]+vh">' "$POST_HTML" "portrait resources receive source-width and aspect-ratio-aware limits"
+assert_contains 'sizes="min\(900px, 1686px, 60\.0000vh, calc\(100vw - 48px\)\)"' "$POST_HTML" "1686px portrait sizes matches its layout constraints"
+assert_contains 'sizes="min\(900px, 1000px, 60\.0000vh, calc\(100vw - 48px\)\)"' "$POST_HTML" "1000px portrait sizes includes its source-width ceiling"
+assert_contains 'sizes="\(min-width: 1500px\) 1452px, calc\(100vw - 48px\)"' "$POST_HTML" "landscape post sizing remains unchanged"
 assert_contains 'sizes="\(min-width: 700px\) 600px, 100vw"' "$HOME_HTML" "homepage sizes matches the actual 600px card width"
 assert_contains 'sizes="\(min-width: 700px\) 600px, 100vw" alt=""' "$HOME_HTML" "homepage card image is decorative beside its heading"
+
+# A 2:3 portrait's 90vh constraint corresponds to a width of 60vh. Verify
+# browser candidate selection against the fixture's 700/1452/1686 widths.
+portrait_slot_1080=$((1080 * 60 / 100))
+portrait_slot_1440=$((1440 * 60 / 100))
+[ "$portrait_slot_1080" -eq 648 ] || fail "1920x1080 portrait slot"
+[ "$portrait_slot_1440" -eq 864 ] || fail "1920x1440 portrait slot"
+[ "$portrait_slot_1080" -le 700 ] || fail "1920x1080 portrait DPR1 candidate range"
+[ $((portrait_slot_1080 * 2)) -gt 700 ] && [ $((portrait_slot_1080 * 2)) -le 1452 ] || fail "1920x1080 portrait DPR2 candidate range"
+[ "$portrait_slot_1440" -gt 700 ] && [ "$portrait_slot_1440" -le 1452 ] || fail "1920x1440 portrait DPR1 candidate range"
+[ $((portrait_slot_1440 * 2)) -gt 1686 ] || fail "1920x1440 portrait DPR2 uses the source-width ceiling"
+pass "portrait sizing policy covers 1080p and 1440p desktop at DPR1 and DPR2"
 
 # Verify the declared homepage slot policy at representative viewport/DPR pairs.
 # Candidate choice is the first available width at or above slot × DPR.
