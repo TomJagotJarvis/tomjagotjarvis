@@ -11,6 +11,10 @@
     quality: optional int (default 85)
     eager:   optional bool; load immediately with high priority (use for the
              first, above-the-fold image) instead of lazy-loading
+    portraitMax: optional int; when set, use portrait-specific sizes capped at
+                 this width, the source width, portraitHeightVh, and gutters
+    portraitHeightVh: optional number (default 90)
+    portraitGutter: optional int (default 0)
 */}}
 
 {{ $page := .page }}
@@ -21,6 +25,9 @@
 {{ $quality := .quality | default 85 }}
 {{ $widths := .widths | default (slice 600 1200 2000) }}
 {{ $eager := .eager | default false }}
+{{ $portraitMax := .portraitMax | default 0 }}
+{{ $portraitHeightVh := .portraitHeightVh | default 90 }}
+{{ $portraitGutter := .portraitGutter | default 0 }}
 
 {{ $slug := path.Base $page.File.Dir }}
 {{ $img := resources.Get (printf "originals/%s/%s" $slug $src) }}
@@ -53,7 +60,17 @@
   {{ range $out }}
     {{ $srcset = $srcset | append (printf "%s %dw" .RelPermalink .Width) }}
   {{ end }}
-  <picture>
+  {{ $isPortrait := gt $img.Height $img.Width }}
+  {{ $portraitWidthVh := 0.0 }}
+  {{ if $isPortrait }}
+    {{/* Cap portrait height without cropping by converting the vh limit to the
+         corresponding width for this image's original aspect ratio. */}}
+    {{ $portraitWidthVh = div (mul (float $img.Width) $portraitHeightVh) $img.Height }}
+    {{ if gt $portraitMax 0 }}
+      {{ $sizes = printf "min(%dpx, %dpx, %.4fvh, calc(100vw - %dpx))" $portraitMax $img.Width $portraitWidthVh (mul $portraitGutter 2) }}
+    {{ end }}
+  {{ end }}
+  <picture{{ if $isPortrait }} class="image-portrait" style="--portrait-source-width: {{ $img.Width }}px; --portrait-vh-width: {{ printf "%.4fvh" $portraitWidthVh }}"{{ end }}>
     <img src="{{ $small.RelPermalink }}"
       srcset="{{ delimit $srcset ", " }}"
       sizes="{{ $sizes }}" alt="{{ $alt }}"

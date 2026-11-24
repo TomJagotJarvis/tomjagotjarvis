@@ -12,9 +12,9 @@
     {{ partial "responsive-img.html" (dict
     "page" .
     "src" .Params.featured
-    "alt" .Title
+    "alt" ""
     "widths" (slice 480 960 1440)
-    "sizes" "(min-width: 1232px) 600px, (min-width: 700px) calc(50vw - 1rem), 100vw"
+    "sizes" "(min-width: 700px) 600px, 100vw"
     "quality" 82
     "eager" (lt $i 2)
     ) }}

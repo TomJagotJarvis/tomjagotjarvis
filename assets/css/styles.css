@@ -24,6 +24,21 @@ a:focus-visible {
   outline-offset: 3px;
 }
 
+.skip-link {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 100;
+  padding: 0.5rem 0.75rem;
+  background: #fff;
+  color: #000;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
 /* Header and Footer */
 header {
   background: #fff;
@@ -161,6 +176,10 @@ header {
   margin: 0;
 }
 
+.post .post-body picture.image-portrait {
+  width: min(900px, var(--portrait-source-width), var(--portrait-vh-width), calc(100vw - 48px));
+}
+
 .pagination {
   display: flex;
   gap: 0.6rem;
@@ -234,8 +253,42 @@ header {
 
 
 @media (max-width: 600px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .site-title {
+    font-size: 1.35rem;
+    white-space: nowrap;
+  }
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.25rem 0.75rem;
+  }
+
+  .nav-links a {
+    margin-left: 0;
+  }
+
   .tag-heading {
     font-size: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .post-preview img {
+    transition: none;
+  }
+
+  .post-preview:hover img {
+    transform: none;
   }
 }
 

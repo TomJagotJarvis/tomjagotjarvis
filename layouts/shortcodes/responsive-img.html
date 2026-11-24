@@ -36,6 +36,9 @@
 "alt" $alt
 "widths" (slice $w1 $w2 $w3)
 "sizes" (printf "(min-width: %dpx) %dpx, calc(100vw - %dpx)" $max $renderMax (mul $gutter 2))
+"portraitMax" 900
+"portraitHeightVh" 90
+"portraitGutter" $gutter
 "quality" 85
 "eager" (eq $imageIndex 0)
 ) }}
